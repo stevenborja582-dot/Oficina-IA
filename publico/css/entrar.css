@@ -1,0 +1,141 @@
+/* ============================================================================
+   Pantalla de entrada. Una sola decisión en pantalla: entrar.
+   ========================================================================= */
+
+.entrada {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .entrada { grid-template-columns: 1.05fr 1fr; }
+}
+
+/* — Lado izquierdo: la promesa del producto ---------------------------------- */
+
+.entrada__escena {
+  display: none;
+  position: relative;
+  padding: var(--e10) var(--e9);
+  border-right: 1px solid var(--linea);
+  background:
+    radial-gradient(90% 70% at 20% 10%, color-mix(in srgb, var(--acento) 10%, transparent), transparent 70%),
+    var(--superficie-2);
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .entrada__escena { display: flex; flex-direction: column; justify-content: space-between; }
+}
+
+.entrada__titular {
+  max-width: 16ch;
+  font-size: clamp(2rem, 1.2rem + 2.4vw, 3rem);
+  font-weight: 640;
+  letter-spacing: -0.032em;
+  line-height: 1.06;
+}
+.entrada__parrafo {
+  margin-top: var(--e5);
+  max-width: 44ch;
+  color: var(--tinta-2);
+  font-size: var(--t-cuerpo);
+}
+
+.entrada__boceto { width: 100%; max-width: 440px; margin-top: var(--e8); opacity: 0.9; }
+.entrada__boceto .habitacion { fill: var(--superficie); stroke: var(--linea-fuerte); stroke-width: 1.5; }
+.entrada__boceto .acento { fill: color-mix(in srgb, var(--acento) 16%, var(--superficie));
+  stroke: color-mix(in srgb, var(--acento) 45%, transparent); }
+.entrada__boceto .mesa { fill: var(--linea-fuerte); }
+
+.entrada__nota {
+  margin-top: var(--e8);
+  font-family: var(--fuente-mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+/* — Lado derecho: el acceso -------------------------------------------------- */
+
+.entrada__acceso {
+  display: grid;
+  place-items: center;
+  padding: var(--e8) var(--e5);
+}
+
+.acceso {
+  width: min(400px, 100%);
+  display: grid;
+  gap: var(--e6);
+}
+
+.acceso__marca {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  color: var(--tinta);
+  text-decoration: none;
+  border-radius: var(--radio-2);
+  width: fit-content;
+}
+.acceso__marca svg { width: 36px; height: 36px; }
+.acceso__marca-texto { display: flex; flex-direction: column; line-height: 1.15; }
+.acceso__marca-nombre { font-size: var(--t-cuerpo); font-weight: 640; letter-spacing: -0.02em; }
+
+.acceso__titulo { font-size: var(--t-titulo); }
+.acceso__sub { margin-top: var(--e2); color: var(--tinta-2); font-size: var(--t-ui); }
+
+.acceso__opciones { display: grid; gap: var(--e3); }
+
+.boton--google {
+  min-height: 48px;
+  font-size: var(--t-cuerpo);
+  font-weight: 560;
+}
+.boton--google svg { width: 18px; height: 18px; }
+
+.acceso__separador {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  color: var(--tinta-3);
+  font-family: var(--fuente-mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.acceso__separador::before,
+.acceso__separador::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--linea);
+}
+
+.acceso__aviso {
+  display: flex;
+  gap: var(--e3);
+  padding: var(--e4);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-3);
+  background: var(--superficie);
+  color: var(--tinta-2);
+  font-size: var(--t-micro);
+  line-height: 1.55;
+}
+.acceso__aviso--error {
+  border-color: var(--peligro-borde);
+  background: var(--peligro-suave);
+  color: var(--peligro);
+}
+.acceso__aviso code {
+  font-family: var(--fuente-mono);
+  font-size: 0.95em;
+  color: var(--tinta);
+  overflow-wrap: anywhere;
+}
+
+.acceso__pie { font-size: var(--t-micro); color: var(--tinta-3); }

@@ -1,0 +1,26 @@
+{
+  "name": "oficina-black-hole",
+  "version": "2.0.0-fase1",
+  "private": true,
+  "description": "Oficina Black Hole v2 — plano interactivo de salas con personajes de IA. Fase 1: cimientos + oficina visual.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node servidor/index.js",
+    "dev": "node --watch servidor/index.js",
+    "bd:migrar": "node servidor/base-datos/migrar.js",
+    "bd:sembrar": "node servidor/base-datos/sembrar.js",
+    "bd:reiniciar": "node servidor/base-datos/reiniciar.js",
+    "verificar": "node --test pruebas/*.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}

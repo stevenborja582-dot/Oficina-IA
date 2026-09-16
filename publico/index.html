@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>La oficina · Oficina Black Hole</title>
+  <meta name="description" content="Plano interactivo de la Oficina Black Hole: una sala por departamento y un personaje por cada IA de tu equipo.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#100f0e" media="(prefers-color-scheme: dark)">
+
+  <link rel="icon" href="/recursos/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/componentes.css">
+  <link rel="stylesheet" href="/css/oficina.css">
+  <script type="module" src="/js/principal.js"></script>
+</head>
+<body>
+  <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+
+  <div class="aplicacion">
+    <header class="cabecera">
+      <div class="contenedor cabecera__interior">
+        <a class="marca" href="#/" aria-label="Oficina Black Hole — ir al plano">
+          <svg class="marca__sello" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="var(--tinta)"/>
+            <circle cx="16" cy="16" r="9" fill="none" stroke="var(--acento)" stroke-width="2.4"/>
+            <circle cx="16" cy="16" r="4.2" fill="var(--tinta)"/>
+            <path d="M6 16a10 10 0 0 0 20 0" fill="none" stroke="var(--acento)" stroke-width="1.2" opacity=".5"/>
+          </svg>
+          <span class="marca__texto">
+            <span class="marca__nombre">Oficina Black Hole</span>
+            <span class="marca__version">Fase 1</span>
+          </span>
+        </a>
+
+        <div class="cabecera__acciones" id="acciones-cabecera"></div>
+      </div>
+    </header>
+
+    <main class="principal" id="contenido" tabindex="-1">
+      <div class="contenedor" id="lienzo-vista"></div>
+    </main>
+  </div>
+
+  <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+</body>
+</html>

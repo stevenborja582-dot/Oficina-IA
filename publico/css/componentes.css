@@ -1,0 +1,477 @@
+/* ============================================================================
+   Componentes compartidos: botones, campos, chips, avatares, modal y avisos.
+   Todos los objetivos táctiles miden 44 px o más en móvil (WCAG 2.5.8).
+   ========================================================================= */
+
+/* ── Botones ─────────────────────────────────────────────────────────────── */
+
+.boton {
+  --boton-fondo: var(--superficie);
+  --boton-tinta: var(--tinta);
+  --boton-borde: var(--linea-fuerte);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e2);
+  min-height: 40px;
+  padding: 0 var(--e4);
+  border: 1px solid var(--boton-borde);
+  border-radius: var(--radio-2);
+  background: var(--boton-fondo);
+  color: var(--boton-tinta);
+  font-size: var(--t-ui);
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--sombra-1);
+  transition:
+    background var(--rapido) var(--curva),
+    border-color var(--rapido) var(--curva),
+    box-shadow var(--medio) var(--curva),
+    transform var(--rapido) var(--curva),
+    opacity var(--rapido) var(--curva);
+}
+
+.boton:hover { background: var(--superficie-2); border-color: var(--tinta-3); }
+.boton:active { transform: translateY(1px); box-shadow: none; }
+
+.boton--primario {
+  --boton-fondo: var(--tinta);
+  --boton-tinta: var(--lienzo);
+  --boton-borde: var(--tinta);
+}
+.boton--primario:hover { --boton-fondo: #2c2926; --boton-borde: #2c2926; }
+:root[data-tema='oscuro'] .boton--primario:hover,
+:root:not([data-tema='claro']) .boton--primario:hover { --boton-fondo: #ffffff; --boton-borde: #ffffff; }
+
+.boton--acento {
+  --boton-fondo: var(--acento-suave);
+  --boton-tinta: var(--acento-fuerte);
+  --boton-borde: var(--acento-borde);
+}
+.boton--acento:hover { --boton-fondo: var(--acento-borde); --boton-borde: var(--acento); }
+
+.boton--fantasma {
+  --boton-fondo: transparent;
+  --boton-borde: transparent;
+  --boton-tinta: var(--tinta-2);
+  box-shadow: none;
+}
+.boton--fantasma:hover { --boton-fondo: var(--superficie-2); --boton-borde: var(--linea); }
+
+.boton--peligro {
+  --boton-tinta: var(--peligro);
+  --boton-borde: var(--peligro-borde);
+  --boton-fondo: transparent;
+  box-shadow: none;
+}
+.boton--peligro:hover { --boton-fondo: var(--peligro-suave); --boton-borde: var(--peligro); }
+
+.boton--pequeno { min-height: 32px; padding: 0 var(--e3); font-size: var(--t-micro); }
+.boton--bloque { width: 100%; }
+
+.boton[disabled],
+.boton[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.boton__icono { width: 16px; height: 16px; flex: none; }
+
+/* Botón cuadrado solo con icono. */
+.boton-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--radio-2);
+  background: transparent;
+  color: var(--tinta-2);
+  cursor: pointer;
+  transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva),
+              border-color var(--rapido) var(--curva);
+}
+.boton-icono:hover { background: var(--superficie-2); border-color: var(--linea); color: var(--tinta); }
+.boton-icono svg { width: 18px; height: 18px; }
+
+/* En móvil todo objetivo táctil mide 44 px, incluidas las acciones de tarjeta. */
+@media (max-width: 719px) {
+  .boton { min-height: 44px; }
+  .boton--pequeno { min-height: 44px; padding-inline: var(--e4); }
+  .boton-icono { width: 44px; height: 44px; }
+}
+
+/* ── Campos de formulario ────────────────────────────────────────────────── */
+
+.campo { display: flex; flex-direction: column; gap: var(--e2); }
+
+.campo__etiqueta {
+  font-size: var(--t-ui);
+  font-weight: 560;
+  color: var(--tinta);
+}
+
+.campo__pista {
+  font-size: var(--t-micro);
+  color: var(--tinta-3);
+  line-height: 1.45;
+}
+
+.campo__error {
+  font-size: var(--t-micro);
+  font-weight: 540;
+  color: var(--peligro);
+}
+
+.control {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-2);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-size: var(--t-cuerpo);
+  transition: border-color var(--rapido) var(--curva), box-shadow var(--rapido) var(--curva);
+}
+
+.control::placeholder { color: var(--tinta-3); }
+
+.control:hover { border-color: var(--tinta-3); }
+
+.control:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 22%, transparent);
+}
+
+.control[aria-invalid='true'] { border-color: var(--peligro); }
+.control[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--peligro) 22%, transparent);
+}
+
+textarea.control { min-height: 120px; resize: vertical; line-height: 1.6; }
+textarea.control.mono { font-family: var(--fuente-mono); font-size: var(--t-micro); }
+
+select.control {
+  appearance: none;
+  padding-right: var(--e8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23736d66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--e4) center;
+}
+
+/* Buscador con lupa. */
+.buscador { position: relative; flex: 1 1 240px; min-width: 0; }
+.buscador__icono {
+  position: absolute;
+  left: var(--e4);
+  top: 50%;
+  translate: 0 -50%;
+  width: 16px; height: 16px;
+  color: var(--tinta-3);
+  pointer-events: none;
+}
+.buscador .control { padding-left: calc(var(--e4) + 16px + var(--e2)); }
+
+/* ── Chips ───────────────────────────────────────────────────────────────── */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e1);
+  padding: 3px var(--e2);
+  border: 1px solid color-mix(in srgb, var(--chip-color, var(--tinta-3)) 32%, transparent);
+  border-radius: var(--radio-pleno);
+  background: color-mix(in srgb, var(--chip-color, var(--tinta-3)) 10%, var(--superficie));
+  color: var(--chip-tinta, var(--tinta-2));
+  font-size: var(--t-nano);
+  font-weight: 560;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.chip__punto {
+  width: 6px; height: 6px; flex: none;
+  border-radius: 50%;
+  background: var(--chip-color, var(--tinta-3));
+}
+
+.chip--neutro {
+  border-color: var(--linea-fuerte);
+  background: var(--superficie-2);
+  color: var(--tinta-2);
+}
+
+/* Filtros conmutables. */
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  min-height: 34px;
+  padding: 0 var(--e3);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-pleno);
+  background: var(--superficie);
+  color: var(--tinta-2);
+  font-size: var(--t-micro);
+  font-weight: 560;
+  cursor: pointer;
+  transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva),
+              border-color var(--rapido) var(--curva);
+}
+.filtro:hover { border-color: var(--tinta-3); color: var(--tinta); }
+.filtro[aria-pressed='true'] {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--lienzo);
+}
+@media (max-width: 719px) { .filtro { min-height: 40px; } }
+
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--avatar-tamano, 44px);
+  height: var(--avatar-tamano, 44px);
+  border-radius: var(--radio-3);
+  background: color-mix(in srgb, var(--avatar-color, var(--tinta-3)) 16%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--avatar-color, var(--tinta-3)) 30%, transparent);
+  color: var(--avatar-tinta, var(--tinta));
+  font-size: var(--t-ui);
+  font-weight: 640;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  user-select: none;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar--redondo { border-radius: 50%; }
+.avatar--pequeno { --avatar-tamano: 32px; font-size: var(--t-micro); }
+
+/* ── Tarjeta ─────────────────────────────────────────────────────────────── */
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-3);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+  transition: border-color var(--medio) var(--curva), box-shadow var(--medio) var(--curva),
+              transform var(--medio) var(--curva);
+}
+
+/* ── Estado vacío ────────────────────────────────────────────────────────── */
+
+.vacio {
+  display: grid;
+  justify-items: center;
+  gap: var(--e3);
+  padding: var(--e9) var(--e5);
+  border: 1px dashed var(--linea-fuerte);
+  border-radius: var(--radio-4);
+  background: color-mix(in srgb, var(--superficie) 60%, transparent);
+  text-align: center;
+}
+.vacio__icono {
+  display: grid;
+  place-items: center;
+  width: 48px; height: 48px;
+  border-radius: var(--radio-3);
+  background: var(--superficie-2);
+  color: var(--tinta-3);
+}
+.vacio__icono svg { width: 22px; height: 22px; }
+.vacio p { max-width: 46ch; color: var(--tinta-2); font-size: var(--t-ui); }
+
+/* ── Modal (elemento <dialog> nativo) ────────────────────────────────────── */
+
+.modal {
+  /* `margin: auto` es lo que centra un <dialog> abierto con showModal(). Hay que
+     devolvérselo a mano porque el reset `* { margin: 0 }` de base.css se lo quita. */
+  margin: auto;
+  width: min(560px, calc(100vw - var(--e6)));
+  max-height: min(86dvh, 860px);
+  padding: 0;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-4);
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: var(--sombra-3);
+  overflow: hidden;
+}
+
+.modal::backdrop {
+  background: var(--velo);
+  backdrop-filter: blur(3px);
+}
+
+/* El display va en [open]: si se pusiera en `.modal` a secas, el diálogo cerrado
+   perdería su `display: none` y se vería siempre. */
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+  animation: modal-entra var(--lento) var(--curva);
+}
+.modal[open]::backdrop { animation: velo-entra var(--medio) var(--curva); }
+
+@keyframes modal-entra {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes velo-entra { from { opacity: 0; } to { opacity: 1; } }
+
+.modal__cabecera {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: var(--e4);
+  padding: var(--e6) var(--e6) var(--e4);
+  border-bottom: 1px solid var(--linea);
+}
+.modal__titulo { font-size: var(--t-seccion); }
+.modal__sub { margin-top: var(--e1); font-size: var(--t-micro); color: var(--tinta-3); }
+.modal__cerrar { margin-left: auto; }
+
+.modal__cuerpo {
+  display: grid;
+  align-content: start;
+  gap: var(--e5);
+  padding: var(--e6);
+  /* min-height: 0 es lo que permite que este bloque encoja y aparezca su barra de
+     desplazamiento en vez de empujar el pie fuera del diálogo. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal__pie {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  padding: var(--e4) var(--e6);
+  border-top: 1px solid var(--linea);
+  background: var(--superficie-2);
+}
+.modal__pie .a-la-derecha { margin-left: auto; }
+
+.rejilla-campos { display: grid; gap: var(--e5); }
+@media (min-width: 620px) {
+  .rejilla-campos--dos { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 619px) {
+  .modal {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-radius: var(--radio-4) var(--radio-4) 0 0;
+    border-bottom: 0;
+  }
+  .modal__cabecera, .modal__cuerpo { padding-inline: var(--e5); }
+  .modal__pie { padding-inline: var(--e5); }
+  .modal__pie .boton { flex: 1 1 auto; }
+}
+
+/* Paleta de color de una sala. */
+.paleta { display: flex; flex-wrap: wrap; gap: var(--e2); }
+.paleta__opcion {
+  width: 36px; height: 36px;
+  border: 2px solid transparent;
+  border-radius: var(--radio-2);
+  background: var(--muestra);
+  cursor: pointer;
+  transition: transform var(--rapido) var(--curva), box-shadow var(--rapido) var(--curva);
+}
+.paleta__opcion:hover { transform: scale(1.06); }
+.paleta__opcion[aria-pressed='true'] {
+  border-color: var(--tinta);
+  box-shadow: 0 0 0 2px var(--superficie) inset;
+}
+@media (max-width: 719px) { .paleta__opcion { width: 44px; height: 44px; } }
+
+/* Selector de icono. */
+.iconos-rejilla { display: flex; flex-wrap: wrap; gap: var(--e2); }
+.iconos-rejilla__opcion {
+  display: grid;
+  place-items: center;
+  width: 44px; height: 44px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-2);
+  background: var(--superficie);
+  color: var(--tinta-2);
+  cursor: pointer;
+  transition: background var(--rapido) var(--curva), border-color var(--rapido) var(--curva);
+}
+.iconos-rejilla__opcion:hover { background: var(--superficie-2); }
+.iconos-rejilla__opcion[aria-pressed='true'] {
+  border-color: var(--tinta);
+  background: var(--superficie-2);
+  color: var(--tinta);
+}
+.iconos-rejilla__opcion svg { width: 20px; height: 20px; }
+
+/* ── Avisos flotantes con "Deshacer" ─────────────────────────────────────── */
+
+.avisos {
+  position: fixed;
+  left: 50%;
+  bottom: var(--e5);
+  translate: -50% 0;
+  z-index: 60;
+  display: grid;
+  gap: var(--e2);
+  width: min(460px, calc(100vw - var(--e6)));
+  pointer-events: none;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  padding: var(--e3) var(--e3) var(--e3) var(--e4);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-3);
+  background: var(--superficie);
+  box-shadow: var(--sombra-3);
+  font-size: var(--t-ui);
+  pointer-events: auto;
+  animation: aviso-entra var(--lento) var(--curva);
+}
+.aviso--error { border-color: var(--peligro-borde); background: var(--peligro-suave); color: var(--peligro); }
+.aviso--exito .aviso__punto { background: var(--exito); }
+.aviso__punto { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--acento); }
+.aviso__texto { flex: 1; min-width: 0; }
+.aviso__accion { margin-left: auto; }
+
+@keyframes aviso-entra {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Carga ───────────────────────────────────────────────────────────────── */
+
+.esqueleto {
+  border-radius: var(--radio-3);
+  background: linear-gradient(90deg, var(--superficie-2) 25%, var(--superficie-3) 37%, var(--superficie-2) 63%);
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+@keyframes brillo { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+
+.girando { animation: gira 900ms linear infinite; }
+@keyframes gira { to { rotate: 360deg; } }
