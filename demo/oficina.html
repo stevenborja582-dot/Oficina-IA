@@ -1,0 +1,1658 @@
+<title>Oficina Black Hole</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+
+<style>
+/* ── Sistema de diseño heredado de la app: fondo cálido, tinta casi negra,
+      un solo acento ámbar y un color por departamento. ─────────────────── */
+:root {
+  --lienzo:       #faf9f7;
+  --superficie:   #ffffff;
+  --superficie-2: #f4f2ee;
+  --superficie-3: #ebe8e2;
+  --velo:         rgba(20, 19, 17, 0.44);
+
+  --tinta:   #141311;
+  --tinta-2: #57534e;
+  --tinta-3: #736d66;
+
+  --linea:        #e7e3dc;
+  --linea-fuerte: #d6d1c8;
+
+  --acento:        #b45309;
+  --acento-fuerte: #92400e;
+  --acento-suave:  #fdf3e6;
+  --acento-borde:  #f0d9b8;
+
+  --peligro:       #b42318;
+  --peligro-suave: #fef3f2;
+  --peligro-borde: #fbd5d1;
+  --exito:         #047857;
+
+  --sombra-1: 0 1px 2px rgba(28, 25, 21, .05), 0 1px 3px rgba(28, 25, 21, .04);
+  --sombra-2: 0 2px 6px -2px rgba(28, 25, 21, .06), 0 8px 20px -6px rgba(28, 25, 21, .09);
+  --sombra-3: 0 24px 56px -16px rgba(28, 25, 21, .22);
+
+  --r1: 6px; --r2: 10px; --r3: 14px; --r4: 20px; --rp: 999px;
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 20px;
+  --e6: 24px; --e7: 32px; --e8: 48px; --e9: 64px;
+
+  --fuente: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --t-display: clamp(1.75rem, 1.15rem + 2.1vw, 2.5rem);
+  --t-titulo:  clamp(1.3rem, 1.05rem + 1vw, 1.7rem);
+  --t-cuerpo:  .9375rem;
+  --t-ui:      .875rem;
+  --t-micro:   .75rem;
+  --t-nano:    .6875rem;
+
+  --curva: cubic-bezier(.22, .61, .36, 1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lienzo: #100f0e; --superficie: #191816; --superficie-2: #211f1c; --superficie-3: #2b2825;
+    --velo: rgba(5,5,4,.66);
+    --tinta: #f5f3ef; --tinta-2: #b9b3a9; --tinta-3: #948d83;
+    --linea: #2c2926; --linea-fuerte: #3b3733;
+    --acento: #f0a35c; --acento-fuerte: #f8c08a; --acento-suave: #2a1f14; --acento-borde: #4a3520;
+    --peligro: #f38b82; --peligro-suave: #2c1613; --peligro-borde: #4d251f; --exito: #4ec08f;
+    --sombra-1: 0 1px 2px rgba(0,0,0,.5);
+    --sombra-2: 0 2px 6px -2px rgba(0,0,0,.5), 0 10px 24px -8px rgba(0,0,0,.55);
+    --sombra-3: 0 28px 60px -18px rgba(0,0,0,.75);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --lienzo: #100f0e; --superficie: #191816; --superficie-2: #211f1c; --superficie-3: #2b2825;
+  --velo: rgba(5,5,4,.66);
+  --tinta: #f5f3ef; --tinta-2: #b9b3a9; --tinta-3: #948d83;
+  --linea: #2c2926; --linea-fuerte: #3b3733;
+  --acento: #f0a35c; --acento-fuerte: #f8c08a; --acento-suave: #2a1f14; --acento-borde: #4a3520;
+  --peligro: #f38b82; --peligro-suave: #2c1613; --peligro-borde: #4d251f; --exito: #4ec08f;
+  --sombra-1: 0 1px 2px rgba(0,0,0,.5);
+  --sombra-2: 0 2px 6px -2px rgba(0,0,0,.5), 0 10px 24px -8px rgba(0,0,0,.55);
+  --sombra-3: 0 28px 60px -18px rgba(0,0,0,.75);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--lienzo);
+  color: var(--tinta);
+  font-family: var(--fuente);
+  font-size: var(--t-cuerpo);
+  line-height: 1.55;
+  letter-spacing: -.006em;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { margin: 0; font-weight: 620; line-height: 1.18; letter-spacing: -.022em; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+button, input, textarea, select { font: inherit; color: inherit; letter-spacing: inherit; }
+svg { display: block; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: var(--r1); }
+::selection { background: var(--acento-suave); color: var(--acento-fuerte); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+.mono { font-family: var(--mono); font-size: var(--t-micro); font-variant-numeric: tabular-nums; }
+.etiqueta { font-family: var(--mono); font-size: var(--t-nano); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--tinta-3); }
+.oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── Estructura ───────────────────────────────────────────────────────── */
+.marco { max-width: 1240px; margin-inline: auto; padding-inline: var(--e4); }
+@media (min-width: 720px) { .marco { padding-inline: var(--e6); } }
+
+.cabecera {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  border-bottom: 1px solid var(--linea);
+  background: color-mix(in srgb, var(--lienzo) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+.cabecera__fila { display: flex; align-items: center; gap: var(--e3); min-height: 60px; }
+.marca { display: flex; align-items: center; gap: var(--e3); background: none; border: 0; padding: 0;
+  cursor: pointer; color: inherit; text-align: left; }
+.marca__sello { width: 26px; height: 26px; flex: none; }
+.marca__nombre { font-size: var(--t-ui); font-weight: 640; letter-spacing: -.02em; display: block; }
+.marca__pie { font-family: var(--mono); font-size: var(--t-nano); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--tinta-3); }
+.cabecera__acciones { display: flex; align-items: center; gap: var(--e2); margin-left: auto; }
+
+main { padding-block: var(--e6) var(--e9); }
+
+/* ── Botones ──────────────────────────────────────────────────────────── */
+.boton {
+  --fondo: var(--superficie); --texto: var(--tinta); --borde: var(--linea-fuerte);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--e2);
+  min-height: 40px; padding: 0 var(--e4);
+  border: 1px solid var(--borde); border-radius: var(--r2);
+  background: var(--fondo); color: var(--texto);
+  font-size: var(--t-ui); font-weight: 560; letter-spacing: -.01em; white-space: nowrap;
+  cursor: pointer; box-shadow: var(--sombra-1);
+  transition: background .12s var(--curva), border-color .12s var(--curva), transform .12s var(--curva);
+}
+.boton:hover { background: var(--superficie-2); border-color: var(--tinta-3); }
+.boton:active { transform: translateY(1px); box-shadow: none; }
+.boton[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+.boton--principal { --fondo: var(--tinta); --texto: var(--lienzo); --borde: var(--tinta); }
+.boton--acento { --fondo: var(--acento-suave); --texto: var(--acento-fuerte); --borde: var(--acento-borde); }
+.boton--peligro { --fondo: transparent; --texto: var(--peligro); --borde: var(--peligro-borde); box-shadow: none; }
+.boton--peligro:hover { --fondo: var(--peligro-suave); --borde: var(--peligro); }
+.boton--chico { min-height: 32px; padding: 0 var(--e3); font-size: var(--t-micro); }
+.boton svg { width: 16px; height: 16px; flex: none; }
+.icono-boton {
+  display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none;
+  border: 1px solid transparent; border-radius: var(--r2); background: none; color: var(--tinta-2); cursor: pointer;
+  transition: background .12s var(--curva), color .12s var(--curva), border-color .12s var(--curva);
+}
+.icono-boton:hover { background: var(--superficie-2); border-color: var(--linea); color: var(--tinta); }
+.icono-boton svg { width: 18px; height: 18px; }
+@media (max-width: 719px) {
+  .boton, .boton--chico { min-height: 44px; }
+  .icono-boton { width: 44px; height: 44px; }
+}
+
+/* ── Encabezado de vista ──────────────────────────────────────────────── */
+.encabezado { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--e4); margin-bottom: var(--e5); }
+.encabezado__texto { flex: 1 1 300px; min-width: 0; }
+.encabezado__titulo { margin-top: var(--e2); font-size: var(--t-display); }
+.encabezado__sub { margin-top: var(--e2); max-width: 62ch; color: var(--tinta-2); font-size: var(--t-ui); }
+.encabezado__acciones { display: flex; flex-wrap: wrap; gap: var(--e2); }
+
+.migas { display: flex; align-items: center; gap: var(--e2); font-size: var(--t-micro); color: var(--tinta-3); }
+.migas button { background: none; border: 0; padding: 0; color: var(--tinta-2); cursor: pointer; font: inherit; }
+.migas button:hover { color: var(--tinta); text-decoration: underline; }
+.migas svg { width: 14px; height: 14px; }
+
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); margin-bottom: var(--e5); }
+.barra__conteo { margin-left: auto; font-size: var(--t-micro); color: var(--tinta-3); }
+@media (max-width: 719px) { .barra__conteo { margin-left: 0; width: 100%; } }
+
+.buscador { position: relative; flex: 1 1 240px; min-width: 0; }
+.buscador svg { position: absolute; left: var(--e4); top: 50%; translate: 0 -50%;
+  width: 16px; height: 16px; color: var(--tinta-3); pointer-events: none; }
+.control {
+  width: 100%; min-height: 44px; padding: var(--e3) var(--e4);
+  border: 1px solid var(--linea-fuerte); border-radius: var(--r2);
+  background: var(--superficie); color: var(--tinta); font-size: var(--t-cuerpo);
+  transition: border-color .12s var(--curva), box-shadow .12s var(--curva);
+}
+.control::placeholder { color: var(--tinta-3); }
+.control:focus { outline: none; border-color: var(--acento);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 22%, transparent); }
+.buscador .control { padding-left: calc(var(--e4) + 24px); }
+textarea.control { resize: vertical; line-height: 1.6; }
+select.control { appearance: none; padding-right: var(--e8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23736d66' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right var(--e4) center; }
+
+/* ── Plano ────────────────────────────────────────────────────────────── */
+.plano {
+  position: relative; border: 1px solid var(--linea); border-radius: var(--r4);
+  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--acento) 5%, transparent), transparent 62%), var(--superficie);
+  box-shadow: var(--sombra-2); overflow: hidden;
+}
+.plano svg { width: 100%; height: auto; }
+.suelo { fill: var(--superficie-2); }
+.rejilla { stroke: var(--linea); stroke-width: 1; opacity: .55; }
+.pasillo-fondo { fill: color-mix(in srgb, var(--superficie) 70%, var(--superficie-2)); }
+.pasillo-linea { stroke: var(--linea-fuerte); stroke-width: 2; stroke-dasharray: 14 12; opacity: .8; }
+.pasillo-texto { fill: var(--tinta-3); font-family: var(--mono); font-size: 13px; letter-spacing: .24em; text-transform: uppercase; }
+
+.sala-zona { cursor: pointer; }
+.sala-zona__g { transition: transform .2s var(--curva); }
+.sala-fondo {
+  fill: color-mix(in srgb, var(--color) 8%, var(--superficie));
+  stroke: color-mix(in srgb, var(--color) 34%, transparent);
+  stroke-width: 1.5; transition: fill .2s var(--curva), stroke .2s var(--curva);
+}
+.sala-zona:hover .sala-zona__g, .sala-zona:focus-visible .sala-zona__g { transform: translateY(-3px); }
+.sala-zona:hover .sala-fondo, .sala-zona:focus-visible .sala-fondo {
+  fill: color-mix(in srgb, var(--color) 15%, var(--superficie));
+  stroke: color-mix(in srgb, var(--color) 62%, transparent);
+}
+.sala-zona:focus { outline: none; }
+.sala-foco { fill: none; stroke: transparent; }
+.sala-zona:focus-visible .sala-foco { stroke: var(--acento); stroke-width: 2.5; }
+.sala-insignia { fill: color-mix(in srgb, var(--color) 18%, var(--superficie)); }
+.sala-icono { stroke: var(--tono); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sala-nombre { fill: var(--tinta); font-family: var(--fuente); font-size: 21px; font-weight: 620; letter-spacing: -.02em; }
+.sala-conteo { fill: var(--tono); font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
+.sala-desc { fill: var(--tinta-3); font-family: var(--fuente); font-size: 13.5px; }
+.escritorio { fill: color-mix(in srgb, var(--color) 22%, var(--superficie));
+  stroke: color-mix(in srgb, var(--color) 45%, transparent); stroke-width: 1; }
+.escritorio--vacio { fill: var(--superficie); stroke-dasharray: 3 3; opacity: .6; }
+.silla { fill: color-mix(in srgb, var(--color) 40%, var(--superficie)); }
+.mas-texto { fill: var(--tinta-3); font-family: var(--mono); font-size: 12px; }
+.puerta { stroke: var(--superficie); stroke-width: 5; stroke-linecap: round; }
+.sala-zona--apagada { opacity: .28; }
+.sala-zona--apagada .sala-zona__g { transform: none; }
+
+/* Lista equivalente para móvil */
+.salas-lista { display: grid; gap: var(--e3); }
+.sala-fila {
+  display: flex; align-items: flex-start; gap: var(--e4); width: 100%; padding: var(--e4);
+  border: 1px solid var(--linea); border-left: 3px solid var(--color); border-radius: var(--r3);
+  background: var(--superficie); box-shadow: var(--sombra-1); color: inherit; text-align: left; cursor: pointer;
+  transition: transform .2s var(--curva), box-shadow .2s var(--curva);
+}
+.sala-fila:hover { transform: translateY(-2px); box-shadow: var(--sombra-2); }
+.sala-fila__ins { display: grid; place-items: center; width: 44px; height: 44px; flex: none;
+  border-radius: var(--r2); background: color-mix(in srgb, var(--color) 14%, var(--superficie)); color: var(--tono); }
+.sala-fila__ins svg { width: 20px; height: 20px; }
+.sala-fila__txt { flex: 1; min-width: 0; display: grid; gap: var(--e1); }
+.sala-fila__nom { font-size: var(--t-cuerpo); font-weight: 600; }
+.sala-fila__desc { font-size: var(--t-micro); color: var(--tinta-3); }
+.sala-fila__flecha { align-self: center; color: var(--tinta-3); }
+.solo-plano { display: none; }
+@media (min-width: 780px) { .solo-plano { display: block; } .solo-lista { display: none; } }
+
+/* ── Chips y avatares ─────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: var(--e1); padding: 3px var(--e2);
+  border: 1px solid color-mix(in srgb, var(--chip, var(--tinta-3)) 32%, transparent);
+  border-radius: var(--rp); background: color-mix(in srgb, var(--chip, var(--tinta-3)) 10%, var(--superficie));
+  color: var(--chip-tono, var(--tinta-2)); font-size: var(--t-nano); font-weight: 560; white-space: nowrap;
+}
+.chip--neutro { border-color: var(--linea-fuerte); background: var(--superficie-2); color: var(--tinta-2); }
+.chip__punto { width: 6px; height: 6px; border-radius: 50%; background: var(--chip, var(--tinta-3)); }
+
+.avatar {
+  display: grid; place-items: center; flex: none;
+  width: var(--tam, 44px); height: var(--tam, 44px); border-radius: var(--r3);
+  background: color-mix(in srgb, var(--color) 16%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--color) 30%, transparent);
+  color: var(--tono); font-size: var(--t-ui); font-weight: 640; user-select: none;
+}
+.avatar--redondo { border-radius: 50%; }
+
+/* ── Tarjetas de personaje ────────────────────────────────────────────── */
+.personajes { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.personaje {
+  display: flex; flex-direction: column; gap: var(--e4); padding: var(--e5);
+  border: 1px solid var(--linea); border-radius: var(--r3); background: var(--superficie);
+  box-shadow: var(--sombra-1);
+  transition: border-color .2s var(--curva), box-shadow .2s var(--curva), transform .2s var(--curva);
+}
+.personaje:hover { border-color: var(--linea-fuerte); box-shadow: var(--sombra-2); transform: translateY(-2px); }
+.personaje--borrador { border-style: dashed; }
+.personaje--pausado { opacity: .72; }
+.personaje__alto { display: flex; align-items: flex-start; gap: var(--e3); }
+.personaje__id { flex: 1; min-width: 0; }
+.personaje__nombre { font-size: var(--t-cuerpo); font-weight: 620; overflow-wrap: anywhere; }
+.personaje__rol { margin-top: 2px; font-size: var(--t-micro); color: var(--tinta-2); overflow-wrap: anywhere; }
+.personaje__chips { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e3); }
+.personaje__persona {
+  padding: var(--e3); border-radius: var(--r2); background: var(--superficie-2);
+  color: var(--tinta-2); font-size: var(--t-micro); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.personaje__acciones { display: flex; align-items: center; gap: var(--e2); margin-top: auto;
+  padding-top: var(--e3); border-top: 1px solid var(--linea); }
+.personaje__acciones .derecha { margin-left: auto; }
+.nuevo-personaje {
+  display: grid; place-content: center; justify-items: center; gap: var(--e2);
+  min-height: 180px; padding: var(--e5); border: 1px dashed var(--linea-fuerte); border-radius: var(--r3);
+  background: none; color: var(--tinta-2); font-size: var(--t-ui); font-weight: 560; cursor: pointer;
+  transition: border-color .2s var(--curva), background .2s var(--curva), color .2s var(--curva);
+}
+.nuevo-personaje:hover { border-color: var(--acento); background: var(--acento-suave); color: var(--acento-fuerte); }
+.nuevo-personaje svg { width: 22px; height: 22px; }
+
+.vacio {
+  display: grid; justify-items: center; gap: var(--e3); padding: var(--e9) var(--e5);
+  border: 1px dashed var(--linea-fuerte); border-radius: var(--r4); text-align: center;
+}
+.vacio p { max-width: 46ch; color: var(--tinta-2); font-size: var(--t-ui); }
+.vacio__icono { display: grid; place-items: center; width: 48px; height: 48px;
+  border-radius: var(--r3); background: var(--superficie-2); color: var(--tinta-3); }
+.vacio__icono svg { width: 22px; height: 22px; }
+
+.sala-ins { display: grid; place-items: center; width: 56px; height: 56px; flex: none;
+  border-radius: var(--r3); background: color-mix(in srgb, var(--color) 14%, var(--superficie));
+  border: 1px solid color-mix(in srgb, var(--color) 28%, transparent); color: var(--tono); }
+.sala-ins svg { width: 26px; height: 26px; }
+.sala-titulo { display: flex; align-items: flex-start; gap: var(--e4); margin-top: var(--e3); }
+
+/* ── Chat ─────────────────────────────────────────────────────────────── */
+.chat { display: flex; flex-direction: column; max-width: 780px; margin-inline: auto; }
+.hilo { display: flex; flex-direction: column; gap: var(--e6); min-height: 26vh; }
+.turno { display: flex; gap: var(--e3); }
+.turno--usuario { flex-direction: column; align-items: flex-end; gap: var(--e1); }
+.burbuja { max-width: min(90%, 560px); padding: var(--e3) var(--e4);
+  border: 1px solid var(--linea); border-radius: var(--r3) var(--r3) var(--r1) var(--r3);
+  background: var(--superficie); box-shadow: var(--sombra-1); white-space: pre-wrap; overflow-wrap: anywhere; }
+.turno__hora { font-size: var(--t-nano); color: var(--tinta-3); }
+.turno__col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--e3); }
+.turno--pensando .turno__col::after {
+  content: 'Pensando…'; font-size: var(--t-micro); color: var(--tinta-3);
+  animation: pulso 1.5s ease-in-out infinite;
+}
+@keyframes pulso { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+.turno__cuerpo { overflow-wrap: anywhere; display: flex; flex-direction: column; gap: var(--e4); }
+.turno__pie { display: flex; flex-wrap: wrap; gap: var(--e3); font-size: var(--t-nano); color: var(--tinta-3); }
+.turno__error {
+  display: flex; align-items: center; gap: var(--e2); padding: var(--e2) var(--e3);
+  border: 1px solid var(--peligro-borde); border-radius: var(--r2);
+  background: var(--peligro-suave); color: var(--peligro); font-size: var(--t-micro);
+}
+.turno__error svg { width: 16px; height: 16px; flex: none; }
+
+.aviso-chat {
+  display: flex; align-items: flex-start; gap: var(--e3); padding: var(--e4); margin-bottom: var(--e5);
+  border: 1px solid var(--acento-borde); border-radius: var(--r3); background: var(--acento-suave);
+  font-size: var(--t-ui);
+}
+.aviso-chat svg { width: 20px; height: 20px; flex: none; color: var(--acento); }
+.aviso-chat p { margin-top: 2px; color: var(--tinta-2); font-size: var(--t-micro); }
+
+.chat-vacio { display: grid; justify-items: center; gap: var(--e3); padding: var(--e8) var(--e5); text-align: center; }
+.chat-vacio p { max-width: 52ch; color: var(--tinta-2); font-size: var(--t-ui); font-style: italic; }
+
+.compositor {
+  position: sticky; bottom: 0; z-index: 20; display: grid; gap: var(--e2);
+  padding-top: var(--e5); padding-bottom: calc(var(--e4) + env(safe-area-inset-bottom, 0px));
+  margin-top: var(--e6);
+  background: linear-gradient(to bottom, transparent, var(--lienzo) 28%);
+}
+.compositor__caja {
+  display: flex; align-items: flex-end; gap: var(--e2); padding: var(--e2);
+  border: 1px solid var(--linea-fuerte); border-radius: var(--r3); background: var(--superficie);
+  box-shadow: var(--sombra-2); transition: border-color .12s var(--curva), box-shadow .12s var(--curva);
+}
+.compositor__caja:focus-within { border-color: var(--acento);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 20%, transparent), var(--sombra-2); }
+.compositor__campo {
+  flex: 1; min-height: 40px; max-height: 200px; padding: var(--e2) var(--e3);
+  border: 0; background: none; color: var(--tinta); font-size: var(--t-cuerpo); line-height: 1.55;
+  resize: none; outline: none;
+}
+.compositor__campo::placeholder { color: var(--tinta-3); }
+.compositor__pista { font-size: var(--t-nano); color: var(--tinta-3); text-align: right; }
+@media (max-width: 719px) { .compositor__pista { display: none; } }
+
+/* Markdown de las respuestas */
+.md-parrafo { line-height: 1.68; }
+.md-titulo { margin-top: var(--e2); font-size: 1.05rem; }
+.md-lista { margin: 0; padding-left: var(--e5); display: grid; gap: var(--e2); }
+.md-lista li { line-height: 1.6; }
+.md-lista li::marker { color: var(--tinta-3); }
+.md-cita { margin: 0; padding-left: var(--e4); border-left: 2px solid var(--linea-fuerte); color: var(--tinta-2); }
+.md-regla { border: 0; border-top: 1px solid var(--linea); margin: 0; }
+.md-enlace { color: var(--acento); text-decoration: underline; text-underline-offset: 3px; }
+.md-codigo { padding: 2px 5px; border: 1px solid var(--linea); border-radius: var(--r1);
+  background: var(--superficie-2); font-family: var(--mono); font-size: .88em; overflow-wrap: anywhere; }
+.md-bloque { margin: 0; border: 1px solid var(--linea); border-radius: var(--r2);
+  background: var(--superficie-2); overflow: hidden; }
+.md-bloque__cab { display: flex; align-items: center; gap: var(--e2);
+  padding: var(--e1) var(--e1) var(--e1) var(--e3); border-bottom: 1px solid var(--linea); color: var(--tinta-3); }
+.md-copiar { display: grid; place-items: center; width: 30px; height: 30px; margin-left: auto;
+  border: 1px solid transparent; border-radius: var(--r1); background: none; color: var(--tinta-3); cursor: pointer; }
+.md-copiar:hover { background: var(--superficie-3); color: var(--tinta); }
+.md-copiar svg { width: 15px; height: 15px; }
+.md-copiar--ok { color: var(--exito); }
+.md-pre { margin: 0; padding: var(--e4); overflow-x: auto; font-family: var(--mono);
+  font-size: var(--t-micro); line-height: 1.65; tab-size: 2; }
+
+/* ── Modal ────────────────────────────────────────────────────────────── */
+dialog.modal {
+  margin: auto; width: min(560px, calc(100vw - var(--e6))); max-height: min(86dvh, 860px);
+  padding: 0; border: 1px solid var(--linea); border-radius: var(--r4);
+  background: var(--superficie); color: var(--tinta); box-shadow: var(--sombra-3); overflow: hidden;
+}
+dialog.modal::backdrop { background: var(--velo); backdrop-filter: blur(3px); }
+dialog.modal[open] { display: flex; flex-direction: column; animation: entra .3s var(--curva); }
+@keyframes entra { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
+.modal__cab { display: flex; flex: none; align-items: flex-start; gap: var(--e4);
+  padding: var(--e6) var(--e6) var(--e4); border-bottom: 1px solid var(--linea); }
+.modal__sub { margin-top: var(--e1); font-size: var(--t-micro); color: var(--tinta-3); }
+.modal__cuerpo { display: grid; align-content: start; gap: var(--e5); padding: var(--e6);
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.modal__pie { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: var(--e3);
+  padding: var(--e4) var(--e6); border-top: 1px solid var(--linea); background: var(--superficie-2); }
+.modal__pie .derecha { margin-left: auto; }
+.campo { display: flex; flex-direction: column; gap: var(--e2); }
+.campo__et { font-size: var(--t-ui); font-weight: 560; }
+.campo__pista { font-size: var(--t-micro); color: var(--tinta-3); }
+.campo__error { font-size: var(--t-micro); font-weight: 540; color: var(--peligro); }
+.dos { display: grid; gap: var(--e5); }
+@media (min-width: 620px) { .dos { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 619px) {
+  dialog.modal { width: 100vw; max-width: 100vw; max-height: 92dvh; margin: auto 0 0;
+    border-radius: var(--r4) var(--r4) 0 0; border-bottom: 0; }
+  .modal__cab, .modal__cuerpo, .modal__pie { padding-inline: var(--e5); }
+  .modal__pie .boton { flex: 1 1 auto; }
+}
+
+/* ── Avisos ───────────────────────────────────────────────────────────── */
+.avisos { position: fixed; left: 50%; bottom: calc(var(--e5) + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0; z-index: 60; display: grid; gap: var(--e2);
+  width: min(460px, calc(100vw - var(--e6))); pointer-events: none; }
+.aviso {
+  display: flex; align-items: center; gap: var(--e3); padding: var(--e3) var(--e3) var(--e3) var(--e4);
+  border: 1px solid var(--linea-fuerte); border-radius: var(--r3); background: var(--superficie);
+  box-shadow: var(--sombra-3); font-size: var(--t-ui); pointer-events: auto;
+  animation: sube .3s var(--curva);
+}
+@keyframes sube { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.aviso--error { border-color: var(--peligro-borde); background: var(--peligro-suave); color: var(--peligro); }
+.aviso__punto { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--acento); }
+.aviso--exito .aviso__punto { background: var(--exito); }
+.aviso__txt { flex: 1; min-width: 0; }
+
+.esqueleto { border-radius: var(--r3); height: 56px;
+  background: linear-gradient(90deg, var(--superficie-2) 25%, var(--superficie-3) 37%, var(--superficie-2) 63%);
+  background-size: 400% 100%; animation: brillo 1.4s ease-in-out infinite; }
+@keyframes brillo { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+</style>
+
+<header class="cabecera">
+  <div class="marco cabecera__fila">
+    <button class="marca" id="ir-plano" aria-label="Volver al plano de la oficina">
+      <svg class="marca__sello" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="var(--tinta)"></rect>
+        <circle cx="16" cy="16" r="9" fill="none" stroke="var(--acento)" stroke-width="2.4"></circle>
+        <circle cx="16" cy="16" r="4.2" fill="var(--tinta)"></circle>
+        <path d="M6 16a10 10 0 0 0 20 0" fill="none" stroke="var(--acento)" stroke-width="1.2" opacity=".5"></path>
+      </svg>
+      <span>
+        <span class="marca__nombre">Oficina Black Hole</span>
+        <span class="marca__pie" id="marca-pie">Planta principal</span>
+      </span>
+    </button>
+    <div class="cabecera__acciones">
+      <button class="icono-boton" id="tema" type="button"></button>
+    </div>
+  </div>
+</header>
+
+<main class="marco" id="lienzo"></main>
+<div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Oficina Black Hole — versión autónoma.
+   Misma oficina que la app del repositorio, en un solo archivo: el plano,
+   las salas, los personajes y el chat. Guarda en el almacén del artefacto
+   cuando está disponible; si no, en este navegador.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ── Iconos ──────────────────────────────────────────────────────────── */
+const TRAZOS = {
+  codigo:   ['m8 6-6 6 6 6', 'm16 6 6 6-6 6', 'm13.5 4-3 16'],
+  paleta:   ['M12 3a9 9 0 1 0 0 18 2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2h1.6A4.2 4.2 0 0 0 21 10.4C21 6.3 16.9 3 12 3Z',
+             'M7.5 11.5h.01', 'M10.5 7.5h.01', 'M15.5 7.5h.01'],
+  chispa:   ['M12 3l1.9 5.3L19 10l-5.1 1.7L12 17l-1.9-5.3L5 10l5.1-1.7z',
+             'M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z'],
+  pluma:    ['M19 3c-3 0-6 1-8.5 3.5C8 9 7 12 7 15l-3 3',
+             'M12 11c-2 2-3 4.5-3 7 2.5 0 5-1 7-3 2.5-2.5 3.5-5.5 3.5-8.5'],
+  rayo:     ['M13 2 4 14h7l-1 8 9-12h-7z'],
+  oficina:  ['M3 21h18', 'M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16', 'M15 21V9h4a2 2 0 0 1 2 2v10',
+             'M9 7h2', 'M9 11h2', 'M9 15h2'],
+  brujula:  ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'm14.9 9.1-1.8 5-5 1.8 1.8-5z'],
+  cubo:     ['M21 8.5v7l-9 5-9-5v-7l9-5z', 'm3 8.5 9 5 9-5', 'M12 13.5v7'],
+  grafico:  ['M3 3v18h18', 'm7 14 3.5-4 3 3L19 7'],
+  escudo:   ['M12 3l8 3v5.5c0 4.6-3.2 8.6-8 9.5-4.8-.9-8-4.9-8-9.5V6z', 'm9 12 2 2 4-4'],
+  buscar:   ['M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z', 'm21 21-4.3-4.3'],
+  mas:      ['M12 5v14', 'M5 12h14'],
+  lapiz:    ['M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16z', 'm13.5 6.5 4 4'],
+  papelera: ['M4 7h16', 'M10 11v6', 'M14 11v6', 'M6 7l1 13h10l1-13', 'M9 7V4h6v3'],
+  derecha:  ['M5 12h14', 'm13 6 6 6-6 6'],
+  enlace:   ['M14 4h6v6', 'M10 14 20 4', 'M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5'],
+  mensaje:  ['M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z'],
+  sol:      ['M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z', 'M12 2v2', 'M12 20v2', 'M2 12h2', 'M20 12h2',
+             'm4.9 4.9 1.4 1.4', 'm17.7 17.7 1.4 1.4', 'm19.1 4.9-1.4 1.4', 'm6.3 17.7-1.4 1.4'],
+  luna:     ['M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z'],
+  cerrar:   ['m6 6 12 12', 'm18 6-12 12'],
+  copiar:   ['M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1Z',
+             'M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'],
+  enviar:   ['M4 12h15', 'm13 6 6 6-6 6'],
+  detener:  ['M7 7h10v10H7z'],
+  historial:['M12 21a9 9 0 1 0-8.5-12', 'M3 4v5h5', 'M12 8v4.5l3 2'],
+  ajustes:  ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+             'M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.9 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14V14a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3Z'],
+};
+const ICONOS_SALA = ['codigo','paleta','chispa','pluma','rayo','oficina','brujula','cubo','grafico','escudo'];
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function el(sel, attrs = {}, hijos = []) {
+  const etiqueta = (sel.match(/^[a-zA-Z][a-zA-Z0-9-]*/) || ['div'])[0];
+  const id = (sel.match(/#([^.#]+)/) || [])[1];
+  const clases = [...sel.matchAll(/\.([^.#]+)/g)].map((m) => m[1]);
+  const n = document.createElement(etiqueta);
+  if (id) n.id = id;
+  clases.forEach((c) => n.classList.add(c));
+  aplicar(n, attrs, false);
+  meter(n, hijos);
+  return n;
+}
+function svg(etiqueta, attrs = {}, hijos = []) {
+  const n = document.createElementNS(SVG_NS, etiqueta);
+  aplicar(n, attrs, true);
+  meter(n, hijos);
+  return n;
+}
+function aplicar(n, attrs, esSvg) {
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === 'texto') n.textContent = String(v);
+    else if (k === 'vars') for (const [p, val] of Object.entries(v)) n.style.setProperty(p, String(val));
+    else if (/^on[A-Z]/.test(k)) n.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (!esSvg && k in n && typeof v !== 'object') { try { n[k] = v; } catch { n.setAttribute(k, String(v)); } }
+    else n.setAttribute(k, String(v));
+  }
+}
+function meter(n, hijos) {
+  (Array.isArray(hijos) ? hijos : [hijos]).flat().forEach((h) => {
+    if (h === null || h === undefined || h === false) return;
+    n.append(h instanceof Node ? h : document.createTextNode(String(h)));
+  });
+}
+function poner(cont, ...hijos) { cont.replaceChildren(); meter(cont, hijos); return cont; }
+function icono(nombre, clase) {
+  const n = svg('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.75',
+    'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', class: clase || null });
+  (TRAZOS[nombre] || TRAZOS.oficina).forEach((d) => n.append(svg('path', { d })));
+  return n;
+}
+const normal = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+/* ── Color con contraste garantizado ─────────────────────────────────────
+   Cada sala tiene su acento y tú eliges cualquiera. En vez de confiar en el
+   ojo, el tono del texto se oscurece (o se aclara, en oscuro) hasta llegar
+   a 4.5:1 contra el fondo real. Una sala rosa chicle sigue cumpliendo AA. */
+const aRgb = (hex) => {
+  const l = String(hex).replace('#', '').trim();
+  const c = l.length === 3 ? l.split('').map((x) => x + x).join('') : l;
+  const n = parseInt(c, 16);
+  return Number.isFinite(n) && c.length === 6 ? { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 } : { r: 87, g: 83, b: 78 };
+};
+const aHex = ({ r, g, b }) => '#' + [r, g, b].map((x) => Math.round(Math.min(255, Math.max(0, x))).toString(16).padStart(2, '0')).join('');
+const lum = ({ r, g, b }) => {
+  const f = (v) => { const p = v / 255; return p <= 0.04045 ? p / 12.92 : ((p + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contraste = (a, b) => { const x = lum(aRgb(a)), y = lum(aRgb(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const mezclar = (a, b, p) => { const x = aRgb(a), y = aRgb(b);
+  return aHex({ r: x.r + (y.r - x.r) * p, g: x.g + (y.g - x.g) * p, b: x.b + (y.b - x.b) * p }); };
+const esOscuro = () => {
+  const t = document.documentElement.dataset.theme;
+  if (t === 'dark') return true;
+  if (t === 'light') return false;
+  return matchMedia('(prefers-color-scheme: dark)').matches;
+};
+function tono(color) {
+  const oscuro = esOscuro();
+  const fondo = oscuro ? '#100f0e' : '#faf9f7';
+  const extremo = oscuro ? '#ffffff' : '#000000';
+  if (contraste(color, fondo) >= 4.5) return color;
+  for (let i = 1; i <= 20; i++) {
+    const c = mezclar(color, extremo, i / 20);
+    if (contraste(c, fondo) >= 4.5) return c;
+  }
+  return extremo;
+}
+const varsSala = (color) => ({ '--color': color, '--tono': tono(color) });
+
+/* ── Geometría del plano ─────────────────────────────────────────────── */
+const PLANO = { ancho: 1200, margen: 40, cols: 3, anchoSala: 354, altoSala: 216, sepCol: 29, sepFila: 30, pasillo: 84 };
+const xCol = (c) => PLANO.margen + c * (PLANO.anchoSala + PLANO.sepCol);
+const yFila = (f) => {
+  const base = PLANO.margen + f * (PLANO.altoSala + PLANO.sepFila);
+  return f === 0 ? base : base + (PLANO.pasillo - PLANO.sepFila);
+};
+const casilla = (i) => ({
+  x: xCol(i % PLANO.cols), y: yFila(Math.floor(i / PLANO.cols)),
+  ancho: PLANO.anchoSala, alto: PLANO.altoSala,
+});
+const rectPasillo = () => ({ x: PLANO.margen, y: yFila(0) + PLANO.altoSala,
+  ancho: PLANO.ancho - PLANO.margen * 2, alto: PLANO.pasillo });
+const altoLienzo = (salas) => {
+  const max = salas.reduce((t, s) => Math.max(t, s.y + s.alto), 0);
+  return Math.max(yFila(1) + PLANO.altoSala, max) + PLANO.margen;
+};
+function primeraLibre(salas) {
+  const ocupadas = new Set(salas.map((s) => s.x + ':' + s.y));
+  for (let i = 0; i < 300; i++) { const h = casilla(i); if (!ocupadas.has(h.x + ':' + h.y)) return h; }
+  return casilla(salas.length);
+}
+
+/* ── Semilla: los seis departamentos de la v1 ────────────────────────── */
+const SALAS_INICIALES = [
+  ['desarrollo', 'Desarrollo & Código', 'Programación, revisión de código, depuración y arquitectura.', '#2563EB', 'codigo'],
+  ['diseno', 'Diseño Visual', 'Interfaces, identidad visual, ilustración y prototipos.', '#7C3AED', 'paleta'],
+  ['asistencia', 'Asistencia Personal', 'Agenda, recordatorios, búsquedas y apoyo del día a día.', '#059669', 'chispa'],
+  ['contenido', 'Redacción & Contenido', 'Textos largos, guiones, correos y material publicable.', '#0D9488', 'pluma'],
+  ['automatizacion', 'Automatización', 'Flujos, tareas repetitivas e integraciones entre servicios.', '#D97706', 'rayo'],
+  ['general', 'General', 'Todo lo que aún no tiene sala propia.', '#57534E', 'oficina'],
+];
+const PERSONAJES_EJEMPLO = [
+  ['desarrollo', 'Nova', 'Arquitecta', 'Eres Nova, arquitecta de software. Respondes en español, con criterio y sin rodeos. Prefieres una decisión clara con sus contras a una lista de opciones.'],
+  ['desarrollo', 'Tipo', 'Revisor de código', 'Eres Tipo, revisor de código. Señalas el fallo concreto y propones el arreglo. Nada de elogios de relleno.'],
+  ['diseno', 'Mimo', 'Directora de arte', 'Eres Mimo, directora de arte. Hablas de jerarquía, contraste y ritmo. Justificas cada decisión visual.'],
+  ['contenido', 'Pluma', 'Redactora jefa', 'Eres Pluma. Escribes en español neutro, claro y sin relleno. Prefieres frases cortas y verbos activos.'],
+  ['automatizacion', 'Axiom', 'Orquestador', 'Eres Axiom. Conviertes procesos manuales en pasos automatizables y dices qué puede fallar en cada uno.'],
+  ['asistencia', 'Pingüino', 'Asistente de escritorio', 'Eres Pingüino, asistente de escritorio. Breve, práctico y un punto seco.'],
+];
+
+const PALETA = [
+  ['#2563EB', 'Azul — Desarrollo'], ['#7C3AED', 'Violeta — Diseño'], ['#059669', 'Verde — Asistencia'],
+  ['#0D9488', 'Teal — Contenido'], ['#D97706', 'Ámbar — Automatización'], ['#57534E', 'Piedra — General'],
+  ['#B42318', 'Rojo'], ['#0EA5E9', 'Cian'],
+];
+const ESTADOS = { activo: 'Activo', borrador: 'Borrador', pausado: 'En pausa' };
+
+function oficinaInicial() {
+  const salas = SALAS_INICIALES.map(([slug, nombre, desc, color, ic], i) => ({
+    id: 's' + (i + 1), slug, nombre, descripcion: desc, color, icono: ic, ...casilla(i),
+  }));
+  const personajes = PERSONAJES_EJEMPLO.map(([slug, nombre, rol, persona], i) => ({
+    id: 'p' + (i + 1),
+    salaId: salas.find((s) => s.slug === slug).id,
+    nombre, rol, persona, estado: 'activo', enlace: '', ejemplo: true,
+  }));
+  return { salas, personajes, siguiente: personajes.length + 1, siguienteSala: salas.length + 1 };
+}
+
+/* ── Estado y persistencia ───────────────────────────────────────────── */
+const CLAVE = 'oficina-black-hole.v1';
+let oficina = oficinaInicial();
+let hilos = {};              // personajeId -> [{rol, texto, hora, error}]
+let vista = { tipo: 'plano' };
+let almacen = null;          // capacidad db, cuando llega
+let preguntar = null;        // capacidad sample, cuando llega
+let capacidadesResueltas = false;
+let guardadoPendiente = null;
+
+function leerLocal() {
+  try {
+    const crudo = localStorage.getItem(CLAVE);
+    if (!crudo) return null;
+    const datos = JSON.parse(crudo);
+    return datos && Array.isArray(datos.salas) ? datos : null;
+  } catch { return null; }
+}
+function escribirLocal() {
+  try { localStorage.setItem(CLAVE, JSON.stringify({ ...oficina, hilos })); } catch { /* modo privado */ }
+}
+
+/** Una escritura cada vez y solo tras un cambio real. */
+function guardar() {
+  escribirLocal();
+  if (!almacen) return;
+  clearTimeout(guardadoPendiente);
+  guardadoPendiente = setTimeout(async () => {
+    try { await almacen.doc('oficina/estado').set({ ...oficina, hilos }); }
+    catch { avisar('No se pudo guardar en la nube; queda en este navegador.', 'error'); }
+  }, 400);
+}
+
+async function conectarCapacidades() {
+  if (!window.claude || typeof window.claude.use !== 'function') { capacidadesResueltas = true; return; }
+  const [db, sample] = await Promise.all([
+    window.claude.use('db').catch(() => null),
+    window.claude.use('sample').catch(() => null),
+  ]);
+  preguntar = sample;
+  if (db) {
+    almacen = db;
+    try {
+      const snap = await db.doc('oficina/estado').get();
+      const datos = snap.exists ? snap.data() : null;
+      if (datos && Array.isArray(datos.salas) && datos.salas.length) {
+        oficina = { salas: datos.salas, personajes: datos.personajes || [],
+          siguiente: datos.siguiente || 1, siguienteSala: datos.siguienteSala || 1 };
+        hilos = datos.hilos || {};
+      } else {
+        await db.doc('oficina/estado').set({ ...oficina, hilos });
+      }
+    } catch { /* se sigue con lo local */ }
+  }
+  capacidadesResueltas = true;
+  pintar();
+}
+
+/* ── Avisos ──────────────────────────────────────────────────────────── */
+function avisar(texto, tipo = 'info', accion = null) {
+  const zona = document.getElementById('avisos');
+  let t = null;
+  const cerrar = () => { clearTimeout(t); tarjeta.remove(); };
+  const tarjeta = el('div.aviso.aviso--' + tipo, {}, [
+    el('span.aviso__punto', { 'aria-hidden': 'true' }),
+    el('span.aviso__txt', { texto }),
+    accion && el('button.boton.boton--chico', { type: 'button', texto: accion.texto,
+      onClick: () => { cerrar(); accion.alPulsar(); } }),
+    el('button.icono-boton', { type: 'button', 'aria-label': 'Cerrar aviso', onClick: cerrar }, [icono('cerrar')]),
+  ]);
+  zona.append(tarjeta);
+  t = setTimeout(cerrar, 7000);
+  tarjeta.addEventListener('mouseenter', () => clearTimeout(t));
+  tarjeta.addEventListener('mouseleave', () => { t = setTimeout(cerrar, 2500); });
+}
+
+/* ── Piezas ──────────────────────────────────────────────────────────── */
+function iniciales(nombre) {
+  const p = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '??';
+  return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[1][0]).toUpperCase();
+}
+const avatar = (personaje, color, tam = 44, redondo = false) =>
+  el('div.avatar' + (redondo ? '.avatar--redondo' : ''), {
+    vars: { ...varsSala(color), '--tam': tam + 'px' }, 'aria-hidden': 'true',
+    texto: iniciales(personaje.nombre),
+  });
+const chip = (texto, { color = null, punto = false, neutro = false } = {}) => {
+  const v = color ? varsSala(color) : null;
+  return el('span.chip' + (neutro ? '.chip--neutro' : ''), {
+    vars: v ? { '--chip': v['--color'], '--chip-tono': v['--tono'] } : undefined,
+  }, [punto && el('span.chip__punto', { 'aria-hidden': 'true' }), texto]);
+};
+const salaDe = (personaje) => oficina.salas.find((s) => s.id === personaje.salaId) || oficina.salas[0];
+const enSala = (salaId) => oficina.personajes.filter((p) => p.salaId === salaId);
+const contar = (n) => (n === 0 ? 'Sala vacía' : n === 1 ? '1 personaje' : n + ' personajes');
+const recortar = (t, max) => { const s = String(t || '').trim(); return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s; };
+const hora = (iso) => new Date(iso).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+
+/* ── Markdown a nodos del DOM ────────────────────────────────────────────
+   Lo que devuelve un modelo es texto que no controlamos: nada pasa por
+   innerHTML y los enlaces se limitan a http/https. */
+const MD_LINEA = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\n]+\*)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^)\s]+\))|(https?:\/\/[^\s<>()]+)/g;
+
+function enlaceSeguro(destino, etiqueta) {
+  let u;
+  try { u = new URL(destino); } catch { return document.createTextNode(etiqueta); }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return document.createTextNode(etiqueta);
+  return el('a.md-enlace', { href: u.toString(), target: '_blank', rel: 'noopener noreferrer nofollow', texto: etiqueta });
+}
+function mdEnLinea(texto) {
+  const nodos = []; let ultimo = 0;
+  for (const m of String(texto).matchAll(MD_LINEA)) {
+    const t = m[0];
+    if (m.index > ultimo) nodos.push(document.createTextNode(texto.slice(ultimo, m.index)));
+    if (t.startsWith('`')) nodos.push(el('code.md-codigo', { texto: t.slice(1, -1) }));
+    else if (t.startsWith('**')) nodos.push(el('strong', {}, mdEnLinea(t.slice(2, -2))));
+    else if (t.startsWith('~~')) nodos.push(el('del', {}, mdEnLinea(t.slice(2, -2))));
+    else if (t.startsWith('*')) nodos.push(el('em', {}, mdEnLinea(t.slice(1, -1))));
+    else if (t.startsWith('[')) {
+      const p = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(t);
+      nodos.push(p ? enlaceSeguro(p[2], p[1]) : document.createTextNode(t));
+    } else nodos.push(enlaceSeguro(t, t));
+    ultimo = m.index + t.length;
+  }
+  if (ultimo < texto.length) nodos.push(document.createTextNode(texto.slice(ultimo)));
+  return nodos;
+}
+function bloqueCodigo(codigo, lenguaje) {
+  const boton = el('button.md-copiar', { type: 'button', 'aria-label': 'Copiar el código' }, [icono('copiar')]);
+  boton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(codigo);
+      boton.classList.add('md-copiar--ok');
+      setTimeout(() => boton.classList.remove('md-copiar--ok'), 1600);
+    } catch { /* sin portapapeles el código sigue a la vista */ }
+  });
+  return el('figure.md-bloque', {}, [
+    el('figcaption.md-bloque__cab', {}, [el('span.mono', { texto: lenguaje || 'texto' }), boton]),
+    el('pre.md-pre', {}, [el('code', { texto: codigo })]),
+  ]);
+}
+function markdown(texto) {
+  const frag = document.createDocumentFragment();
+  const lineas = String(texto ?? '').replace(/\r\n/g, '\n').split('\n');
+  let i = 0;
+  while (i < lineas.length) {
+    const linea = lineas[i];
+    const cerca = /^\s*```(\w*)\s*$/.exec(linea);
+    if (cerca) {
+      const cuerpo = []; i++;
+      while (i < lineas.length && !/^\s*```\s*$/.test(lineas[i])) cuerpo.push(lineas[i++]);
+      i++;
+      frag.append(bloqueCodigo(cuerpo.join('\n'), cerca[1]));
+      continue;
+    }
+    if (/^\s*$/.test(linea)) { i++; continue; }
+    if (/^\s*(---|\*\*\*|___)\s*$/.test(linea)) { frag.append(el('hr.md-regla')); i++; continue; }
+    const tit = /^(#{1,4})\s+(.*)$/.exec(linea);
+    if (tit) { frag.append(el('h3.md-titulo', {}, mdEnLinea(tit[2]))); i++; continue; }
+    if (/^\s*>\s?/.test(linea)) {
+      const c = [];
+      while (i < lineas.length && /^\s*>\s?/.test(lineas[i])) c.push(lineas[i++].replace(/^\s*>\s?/, ''));
+      frag.append(el('blockquote.md-cita', {}, markdown(c.join('\n'))));
+      continue;
+    }
+    const vin = /^\s*([-*+])\s+/.test(linea), num = /^\s*\d+[.)]\s+/.test(linea);
+    if (vin || num) {
+      const patron = vin ? /^\s*([-*+])\s+/ : /^\s*\d+[.)]\s+/;
+      const lista = el(vin ? 'ul.md-lista' : 'ol.md-lista');
+      while (i < lineas.length && patron.test(lineas[i])) lista.append(el('li', {}, mdEnLinea(lineas[i++].replace(patron, ''))));
+      frag.append(lista);
+      continue;
+    }
+    const par = [];
+    while (i < lineas.length && !/^\s*$/.test(lineas[i]) && !/^\s*```/.test(lineas[i]) &&
+           !/^#{1,4}\s+/.test(lineas[i]) && !/^\s*>\s?/.test(lineas[i]) &&
+           !/^\s*([-*+])\s+/.test(lineas[i]) && !/^\s*\d+[.)]\s+/.test(lineas[i])) par.push(lineas[i++]);
+    frag.append(el('p.md-parrafo', {}, mdEnLinea(par.join('\n'))));
+  }
+  return frag;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────── */
+function abrirModal({ titulo, subtitulo, contenido, acciones }) {
+  const d = el('dialog.modal', { 'aria-labelledby': 'modal-titulo' });
+  const cerrar = () => { if (d.open) d.close(); };
+  d.addEventListener('close', () => d.remove());
+  d.addEventListener('click', (e) => { if (e.target === d) cerrar(); });
+  d.append(
+    el('header.modal__cab', {}, [
+      el('div', {}, [
+        el('h2#modal-titulo', { texto: titulo }),
+        subtitulo && el('p.modal__sub', { texto: subtitulo }),
+      ]),
+      el('button.icono-boton', { type: 'button', 'aria-label': 'Cerrar',
+        style: 'margin-left:auto', onClick: cerrar }, [icono('cerrar')]),
+    ]),
+    el('div.modal__cuerpo', {}, [contenido]),
+    el('footer.modal__pie', {}, acciones(cerrar)),
+  );
+  document.body.append(d);
+  d.showModal();
+  const primero = d.querySelector('input, textarea, select');
+  if (primero) primero.focus({ preventScroll: true });
+  return { dialogo: d, cerrar };
+}
+let nCampos = 0;
+function campo({ etiqueta, pista, control, obligatorio }) {
+  const id = 'c' + (++nCampos);
+  control.id = id;
+  control.classList.add('control');
+  return el('div.campo', {}, [
+    el('label.campo__et', { htmlFor: id, texto: obligatorio ? etiqueta + ' *' : etiqueta }),
+    control,
+    pista && el('p.campo__pista', { texto: pista }),
+    el('p.campo__error', { 'data-error': id, hidden: true }),
+  ]);
+}
+function marcarError(dialogo, nombre, mensaje) {
+  const control = dialogo.querySelector('[name="' + nombre + '"]');
+  if (!control) return false;
+  const hueco = dialogo.querySelector('[data-error="' + control.id + '"]');
+  if (hueco) { hueco.textContent = mensaje; hueco.hidden = false; }
+  control.setAttribute('aria-invalid', 'true');
+  control.focus();
+  return true;
+}
+
+/* ── Vista: plano ────────────────────────────────────────────────────── */
+let consultaPlano = '';
+
+function salaEnPlano(sala, personajes, apagada) {
+  const v = varsSala(sala.color);
+  const g = svg('g', { class: 'sala-zona__g' });
+  g.append(
+    svg('rect', { class: 'sala-fondo', x: sala.x, y: sala.y, width: sala.ancho, height: sala.alto, rx: 14 }),
+    svg('rect', { class: 'sala-foco', x: sala.x - 4, y: sala.y - 4, width: sala.ancho + 8, height: sala.alto + 8, rx: 18 }),
+    svg('rect', { class: 'sala-insignia', x: sala.x + 20, y: sala.y + 20, width: 38, height: 38, rx: 11 }),
+  );
+  const ic = svg('g', { class: 'sala-icono', transform: 'translate(' + (sala.x + 28) + ',' + (sala.y + 28) + ') scale(0.92)' });
+  (TRAZOS[sala.icono] || TRAZOS.oficina).forEach((d) => ic.append(svg('path', { d })));
+  g.append(ic,
+    svg('text', { class: 'sala-nombre', x: sala.x + 72, y: sala.y + 39, texto: recortar(sala.nombre, 24) }),
+    svg('text', { class: 'sala-conteo', x: sala.x + 72, y: sala.y + 56, texto: contar(personajes.length) }),
+    svg('text', { class: 'sala-desc', x: sala.x + 20, y: sala.y + 94, texto: recortar(sala.descripcion, 46) }),
+  );
+
+  const pos = (i) => ({ ex: sala.x + 20 + (i % 4) * 81, ey: sala.y + 110 + Math.floor(i / 4) * 40 });
+  const desborde = personajes.length > 8;
+  const dibujados = desborde ? 7 : personajes.length;
+  personajes.slice(0, dibujados).forEach((p, i) => {
+    const { ex, ey } = pos(i);
+    g.append(
+      svg('rect', { class: 'escritorio' + (p.estado === 'borrador' ? ' escritorio--vacio' : ''),
+        x: ex, y: ey, width: 69, height: 22, rx: 6 }),
+      svg('circle', { class: 'silla', cx: ex + 34.5, cy: ey + 32, r: 6 }),
+    );
+  });
+  if (desborde) {
+    const { ex, ey } = pos(dibujados);
+    g.append(svg('text', { class: 'mas-texto', x: ex, y: ey + 16, texto: '+' + (personajes.length - dibujados) + ' más' }));
+  }
+  if (!personajes.length) {
+    const { ex, ey } = pos(0);
+    g.append(svg('rect', { class: 'escritorio escritorio--vacio', x: ex, y: ey, width: 69, height: 22, rx: 6 }));
+  }
+
+  const centro = sala.x + sala.ancho / 2;
+  const yPuerta = sala.y < rectPasillo().y ? sala.y + sala.alto : sala.y;
+  g.append(svg('line', { class: 'puerta', x1: centro - 26, y1: yPuerta, x2: centro + 26, y2: yPuerta }));
+  g.setAttribute('aria-hidden', 'true');
+
+  const zona = svg('a', {
+    class: 'sala-zona' + (apagada ? ' sala-zona--apagada' : ''),
+    href: '#', role: 'button',
+    'aria-label': sala.nombre + '. ' + contar(personajes.length) + '.',
+    tabindex: apagada ? '-1' : '0',
+  }, [g]);
+  zona.style.setProperty('--color', v['--color']);
+  zona.style.setProperty('--tono', v['--tono']);
+  zona.addEventListener('click', (e) => { e.preventDefault(); irASala(sala.id); });
+  return zona;
+}
+
+function lienzoPlano(filtradas) {
+  const alto = altoLienzo(oficina.salas);
+  const s = svg('svg', { viewBox: '0 0 ' + PLANO.ancho + ' ' + alto, role: 'group',
+    'aria-label': 'Plano de la oficina', preserveAspectRatio: 'xMidYMid meet' });
+  const defs = svg('defs');
+  const patron = svg('pattern', { id: 'rejilla-suelo', width: 24, height: 24, patternUnits: 'userSpaceOnUse' });
+  patron.append(svg('path', { class: 'rejilla', d: 'M24 0H0V24', fill: 'none' }));
+  defs.append(patron);
+  s.append(defs,
+    svg('rect', { class: 'suelo', x: 0, y: 0, width: PLANO.ancho, height: alto }),
+    svg('rect', { x: 0, y: 0, width: PLANO.ancho, height: alto, fill: 'url(#rejilla-suelo)' }));
+  const p = rectPasillo();
+  s.append(
+    svg('rect', { class: 'pasillo-fondo', x: p.x, y: p.y, width: p.ancho, height: p.alto, rx: 12 }),
+    svg('line', { class: 'pasillo-linea', x1: p.x + 24, y1: p.y + p.alto / 2, x2: p.x + p.ancho - 24, y2: p.y + p.alto / 2 }),
+    svg('text', { class: 'pasillo-texto', x: PLANO.ancho / 2, y: p.y + p.alto / 2 - 14, 'text-anchor': 'middle', texto: 'Pasillo' }),
+  );
+  oficina.salas.forEach((sala) => s.append(salaEnPlano(sala, enSala(sala.id), !filtradas.has(sala.id))));
+  return s;
+}
+
+function filaSala(sala, apagada) {
+  const n = enSala(sala.id).length;
+  return el('button.sala-fila', {
+    type: 'button', vars: varsSala(sala.color),
+    style: apagada ? 'opacity:.35' : '',
+    onClick: () => irASala(sala.id),
+  }, [
+    el('span.sala-fila__ins', { 'aria-hidden': 'true' }, [icono(sala.icono)]),
+    el('span.sala-fila__txt', {}, [
+      el('span.sala-fila__nom', { texto: sala.nombre }),
+      el('span.sala-fila__desc', { texto: sala.descripcion || 'Sin descripción' }),
+      el('span', {}, [chip(contar(n), { color: sala.color, punto: true })]),
+    ]),
+    el('span.sala-fila__flecha', { 'aria-hidden': 'true' }, [icono('derecha')]),
+  ]);
+}
+
+function vistaPlano() {
+  const q = normal(consultaPlano);
+  const coincide = (sala) => {
+    if (!q) return true;
+    if (normal(sala.nombre + ' ' + sala.descripcion).includes(q)) return true;
+    return enSala(sala.id).some((p) => normal(p.nombre + ' ' + p.rol + ' ' + p.persona).includes(q));
+  };
+  const filtradas = new Set(oficina.salas.filter(coincide).map((s) => s.id));
+  const encontrados = q
+    ? oficina.personajes.filter((p) => normal(p.nombre + ' ' + p.rol + ' ' + p.persona).includes(q))
+    : [];
+  const hayEjemplos = oficina.personajes.some((p) => p.ejemplo);
+
+  const conteo = el('p.barra__conteo', { role: 'status' });
+  conteo.textContent = q
+    ? filtradas.size + ' sala(s) y ' + encontrados.length + ' personaje(s) coinciden'
+    : oficina.salas.length + ' salas · ' + oficina.personajes.length + ' personaje' + (oficina.personajes.length === 1 ? '' : 's');
+
+  const campoBusqueda = el('input.control', {
+    type: 'search', value: consultaPlano, placeholder: 'Buscar un personaje o una sala…',
+    'aria-label': 'Buscar en la oficina', autocomplete: 'off',
+    onInput: (e) => { consultaPlano = e.target.value; pintar({ focoBusqueda: true }); },
+  });
+
+  return el('section', {}, [
+    el('header.encabezado', {}, [
+      el('div.encabezado__texto', {}, [
+        el('h1.encabezado__titulo', { style: 'margin-top:0', texto: 'La oficina' }),
+        el('p.encabezado__sub', {
+          texto: 'Cada sala es un departamento. Entra en una para ver a sus personajes, editarlos o hablar con ellos.',
+        }),
+      ]),
+      el('div.encabezado__acciones', {}, [
+        hayEjemplos && el('button.boton', { type: 'button', onClick: quitarEjemplos }, [
+          icono('papelera'), 'Quitar los ejemplos',
+        ]),
+        el('button.boton', { type: 'button', onClick: () => modalSala(null) }, [icono('mas'), 'Nueva sala']),
+      ]),
+    ]),
+    el('div.barra', {}, [
+      el('div.buscador', {}, [icono('buscar'), campoBusqueda]),
+      conteo,
+    ]),
+    el('div.plano.solo-plano', {}, [lienzoPlano(filtradas)]),
+    el('div.salas-lista.solo-lista', {}, oficina.salas.map((s) => filaSala(s, q && !filtradas.has(s.id)))),
+    encontrados.length > 0 && el('section', { style: 'margin-top:var(--e6)' }, [
+      el('p.etiqueta', { texto: 'Personajes encontrados' }),
+      el('div.personajes', { style: 'margin-top:var(--e3)' },
+        encontrados.map((p) => tarjetaPersonaje(p, salaDe(p)))),
+    ]),
+  ]);
+}
+
+/* ── Vista: sala ─────────────────────────────────────────────────────── */
+let consultaSala = '';
+
+function tarjetaPersonaje(personaje, sala) {
+  const abrir = personaje.enlace && el('a.boton.boton--chico', {
+    href: personaje.enlace, target: '_blank', rel: 'noopener noreferrer',
+  }, [icono('enlace'), 'Abrir']);
+
+  return el('article.personaje.personaje--' + personaje.estado, { vars: varsSala(sala.color) }, [
+    el('div.personaje__alto', {}, [
+      avatar(personaje, sala.color, 44),
+      el('div.personaje__id', {}, [
+        el('h3.personaje__nombre', { texto: personaje.nombre }),
+        el('p.personaje__rol', { texto: personaje.rol || 'Sin rol asignado' }),
+        el('div.personaje__chips', {}, [
+          chip(sala.nombre, { color: sala.color, punto: true }),
+          personaje.estado !== 'activo' && chip(ESTADOS[personaje.estado], { neutro: true }),
+          personaje.ejemplo && chip('ejemplo', { neutro: true }),
+        ]),
+      ]),
+    ]),
+    personaje.persona && el('p.personaje__persona', { texto: personaje.persona, title: personaje.persona }),
+    el('div.personaje__acciones', {}, [
+      el('button.boton.boton--chico.boton--acento', {
+        type: 'button', onClick: () => irAChat(personaje.id),
+      }, [icono('mensaje'), 'Chatear']),
+      abrir,
+      el('button.icono-boton.derecha', { type: 'button', 'aria-label': 'Editar ' + personaje.nombre,
+        title: 'Editar', onClick: () => modalPersonaje(personaje) }, [icono('lapiz')]),
+      el('button.icono-boton', { type: 'button', 'aria-label': 'Eliminar ' + personaje.nombre,
+        title: 'Eliminar', onClick: () => eliminarPersonaje(personaje) }, [icono('papelera')]),
+    ]),
+  ]);
+}
+
+function vistaSala() {
+  const sala = oficina.salas.find((s) => s.id === vista.salaId);
+  if (!sala) return vistaPerdida('Esa sala ya no existe.');
+  const todos = enSala(sala.id);
+  const q = normal(consultaSala);
+  const visibles = q ? todos.filter((p) => normal(p.nombre + ' ' + p.rol + ' ' + p.persona).includes(q)) : todos;
+
+  const rejilla = el('div.personajes');
+  if (!todos.length) {
+    poner(rejilla, el('div.vacio', {}, [
+      el('span.vacio__icono', { 'aria-hidden': 'true' }, [icono(sala.icono)]),
+      el('h2', { texto: 'Sala vacía' }),
+      el('p', { texto: 'Todavía no hay ninguna IA en este departamento. Registra la primera y aparecerá también en el plano.' }),
+      el('button.boton.boton--principal', { type: 'button', onClick: () => modalPersonaje(null, sala.id) },
+        [icono('mas'), 'Añadir el primer personaje']),
+    ]));
+    rejilla.classList.remove('personajes');
+  } else if (!visibles.length) {
+    poner(rejilla, el('div.vacio', {}, [
+      el('span.vacio__icono', { 'aria-hidden': 'true' }, [icono('buscar')]),
+      el('h2', { texto: 'Sin coincidencias' }),
+      el('p', { texto: 'Ningún personaje de esta sala encaja con lo que buscas.' }),
+    ]));
+    rejilla.classList.remove('personajes');
+  } else {
+    poner(rejilla, ...visibles.map((p) => tarjetaPersonaje(p, sala)),
+      el('button.nuevo-personaje', { type: 'button', onClick: () => modalPersonaje(null, sala.id) },
+        [icono('mas'), 'Añadir personaje']));
+  }
+
+  return el('section', { vars: varsSala(sala.color) }, [
+    el('header.encabezado', {}, [
+      el('div.encabezado__texto', {}, [
+        el('nav.migas', { 'aria-label': 'Ruta' }, [
+          el('button', { type: 'button', texto: 'Plano', onClick: irAPlano }),
+          icono('derecha'),
+          el('span', { texto: sala.nombre }),
+        ]),
+        el('div.sala-titulo', {}, [
+          el('span.sala-ins', { 'aria-hidden': 'true' }, [icono(sala.icono)]),
+          el('div', {}, [
+            el('h1.encabezado__titulo', { texto: sala.nombre }),
+            el('p.encabezado__sub', { texto: sala.descripcion || 'Esta sala todavía no tiene descripción.' }),
+          ]),
+        ]),
+      ]),
+      el('div.encabezado__acciones', {}, [
+        el('button.boton', { type: 'button', onClick: () => modalSala(sala) }, [icono('ajustes'), 'Editar sala']),
+        el('button.boton.boton--principal', { type: 'button', onClick: () => modalPersonaje(null, sala.id) },
+          [icono('mas'), 'Nuevo personaje']),
+      ]),
+    ]),
+    todos.length > 0 && el('div.barra', {}, [
+      el('div.buscador', {}, [icono('buscar'), el('input.control', {
+        type: 'search', value: consultaSala, placeholder: 'Buscar en ' + sala.nombre + '…',
+        'aria-label': 'Buscar en ' + sala.nombre, autocomplete: 'off',
+        onInput: (e) => { consultaSala = e.target.value; pintar({ focoBusqueda: true }); },
+      })]),
+      el('p.barra__conteo', { role: 'status',
+        texto: visibles.length + ' de ' + todos.length + ' personaje' + (todos.length === 1 ? '' : 's') }),
+    ]),
+    rejilla,
+  ]);
+}
+
+const vistaPerdida = (mensaje) => el('div.vacio', {}, [
+  el('h2', { texto: 'No encontrado' }),
+  el('p', { texto: mensaje }),
+  el('button.boton', { type: 'button', texto: 'Volver al plano', onClick: irAPlano }),
+]);
+
+/* ── Vista: chat ─────────────────────────────────────────────────────── */
+let enCurso = null;
+
+function turnoUsuario(m) {
+  return el('article.turno.turno--usuario', {}, [
+    el('div.burbuja', { texto: m.texto }),
+    el('time.turno__hora', { datetime: m.hora, texto: hora(m.hora) }),
+  ]);
+}
+
+function turnoAsistente(personaje, sala, m) {
+  const cuerpo = el('div.turno__cuerpo');
+  const pie = el('div.turno__pie', { hidden: true });
+  const error = el('div.turno__error', { hidden: true, role: 'status' });
+  const nodo = el('article.turno.turno--asistente', {}, [
+    avatar(personaje, sala.color, 30, true),
+    el('div.turno__col', {}, [cuerpo, error, pie]),
+  ]);
+
+  let texto = (m && m.texto) || '';
+  let pedido = false;
+  const repintar = () => poner(cuerpo, markdown(texto));
+  if (texto) repintar();
+
+  const ponerError = (msg) => {
+    if (!msg) { error.hidden = true; return; }
+    poner(error, icono('escudo'), el('span', { texto: msg }));
+    error.hidden = false;
+  };
+  const ponerPie = (datos) => {
+    if (!datos || !datos.hora) return;
+    poner(pie, el('time', { datetime: datos.hora, texto: hora(datos.hora) }));
+    pie.hidden = false;
+  };
+  if (m) { ponerPie(m); ponerError(m.error); if (!m.texto && m.error) cuerpo.hidden = true; }
+
+  return {
+    nodo,
+    pensando(activo) { nodo.classList.toggle('turno--pensando', activo); },
+    /** onText entrega la respuesta ENTERA cada vez, no el trozo nuevo. */
+    escribir(completo) {
+      texto = completo;
+      cuerpo.hidden = false;
+      if (pedido) return;
+      pedido = true;
+      requestAnimationFrame(() => { pedido = false; repintar(); });
+    },
+    cerrar(datos) { texto = (datos && datos.texto) || texto; repintar();
+      if (!texto) cuerpo.hidden = true; ponerPie(datos); ponerError(datos && datos.error); },
+  };
+}
+
+function vistaChat() {
+  const personaje = oficina.personajes.find((p) => p.id === vista.personajeId);
+  if (!personaje) return vistaPerdida('Ese personaje ya no está en la oficina.');
+  const sala = salaDe(personaje);
+  const mensajes = hilos[personaje.id] || [];
+
+  const hilo = el('div.hilo', { role: 'log', 'aria-live': 'polite',
+    'aria-label': 'Conversación con ' + personaje.nombre });
+
+  const pintarHilo = () => {
+    if (!mensajes.length) {
+      poner(hilo, el('div.chat-vacio', {}, [
+        avatar(personaje, sala.color, 56),
+        el('h2', { texto: personaje.nombre }),
+        el('p', { texto: personaje.persona || 'Este personaje aún no tiene persona. Dásela desde "Editar" y notarás el cambio.' }),
+      ]));
+      return;
+    }
+    poner(hilo, ...mensajes.map((m) => m.rol === 'user'
+      ? turnoUsuario(m)
+      : turnoAsistente(personaje, sala, m).nodo));
+  };
+  pintarHilo();
+
+  const campoTexto = el('textarea.compositor__campo', {
+    rows: 1, placeholder: 'Escribe a ' + personaje.nombre + '…',
+    'aria-label': 'Mensaje para ' + personaje.nombre,
+  });
+  const botonEnviar = el('button.boton.boton--principal', { type: 'submit', 'aria-label': 'Enviar mensaje' }, [icono('enviar')]);
+  const botonDetener = el('button.boton', { type: 'button', hidden: true, 'aria-label': 'Detener la respuesta' },
+    [icono('detener'), 'Detener']);
+
+  const compositor = el('form.compositor', {}, [
+    el('div.compositor__caja', {}, [campoTexto, botonEnviar, botonDetener]),
+    el('p.compositor__pista', { texto: 'Enter envía · Mayús+Enter salta de línea' }),
+  ]);
+
+  const disponible = Boolean(preguntar);
+  if (!disponible && capacidadesResueltas) {
+    campoTexto.disabled = true;
+    botonEnviar.disabled = true;
+    campoTexto.placeholder = 'Chat no disponible aquí';
+  }
+
+  const ajustar = () => {
+    campoTexto.style.setProperty('height', 'auto');
+    campoTexto.style.setProperty('height', Math.min(campoTexto.scrollHeight, 200) + 'px');
+  };
+  campoTexto.addEventListener('input', ajustar);
+  campoTexto.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); enviar(); }
+  });
+  compositor.addEventListener('submit', (e) => { e.preventDefault(); enviar(); });
+  botonDetener.addEventListener('click', () => { if (enCurso) enCurso.abort(); });
+
+  const alFinal = () => innerHeight + scrollY >= document.body.scrollHeight - 160;
+  const bajar = (forzar) => {
+    if (!forzar && !alFinal()) return;
+    requestAnimationFrame(() => scrollTo({ top: document.body.scrollHeight, behavior: forzar ? 'auto' : 'smooth' }));
+  };
+
+  async function enviar() {
+    const texto = campoTexto.value.trim();
+    if (!texto || enCurso || !preguntar) return;
+
+    if (hilo.querySelector('.chat-vacio')) poner(hilo);
+    campoTexto.value = '';
+    ajustar();
+
+    const mio = { rol: 'user', texto, hora: new Date().toISOString() };
+    mensajes.push(mio);
+    hilos[personaje.id] = mensajes;
+    hilo.append(turnoUsuario(mio));
+
+    const turno = turnoAsistente(personaje, sala, null);
+    turno.pensando(true);
+    hilo.append(turno.nodo);
+    bajar(true);
+
+    const ctl = new AbortController();
+    enCurso = ctl;
+    botonEnviar.hidden = true;
+    botonDetener.hidden = false;
+
+    // La persona va como turno de usuario inicial: `sample` no tiene system prompt.
+    const instrucciones = (personaje.persona || 'Eres ' + personaje.nombre + ', ' + (personaje.rol || 'un compañero de oficina') + '.') +
+      '\n\nResponde siempre en español. Usa Markdown cuando ayude (listas, código), nunca HTML.';
+    const turnos = [{ role: 'user', content: instrucciones },
+      { role: 'assistant', content: 'Entendido. Soy ' + personaje.nombre + '.' }];
+    for (const m of mensajes) turnos.push({ role: m.rol === 'user' ? 'user' : 'assistant', content: m.texto });
+
+    let recogido = '';
+    let fallo = null;
+    try {
+      const { text } = await preguntar(turnos, {
+        cache: false,
+        signal: ctl.signal,
+        onText: ({ text }) => { recogido = text; turno.pensando(false); turno.escribir(text); bajar(); },
+      });
+      recogido = text;
+    } catch (e) {
+      recogido = (e && e.text) || recogido;
+      const copias = {
+        cancelled: 'Respuesta detenida.',
+        not_granted: 'Falta permiso para preguntar a Claude desde esta página.',
+        rate_limited: 'Demasiadas preguntas seguidas. Espera un momento.',
+      };
+      fallo = copias[e && e.code] || 'La respuesta se cortó: ' + ((e && e.message) || 'error desconocido');
+    }
+
+    const suyo = { rol: 'assistant', texto: recogido, hora: new Date().toISOString(), error: fallo };
+    mensajes.push(suyo);
+    hilos[personaje.id] = mensajes;
+    guardar();
+
+    turno.pensando(false);
+    turno.cerrar(suyo);
+    enCurso = null;
+    botonEnviar.hidden = false;
+    botonDetener.hidden = true;
+    campoTexto.focus();
+    bajar();
+  }
+
+  return el('section.chat', { vars: varsSala(sala.color) }, [
+    el('header.encabezado', {}, [
+      el('div.encabezado__texto', {}, [
+        el('nav.migas', { 'aria-label': 'Ruta' }, [
+          el('button', { type: 'button', texto: 'Plano', onClick: irAPlano }),
+          icono('derecha'),
+          el('button', { type: 'button', texto: sala.nombre, onClick: () => irASala(sala.id) }),
+          icono('derecha'),
+          el('span', { texto: personaje.nombre }),
+        ]),
+        el('div.sala-titulo', {}, [
+          avatar(personaje, sala.color, 52),
+          el('div', {}, [
+            el('h1.encabezado__titulo', { texto: personaje.nombre }),
+            el('p.encabezado__sub', { texto: personaje.rol || 'Sin rol asignado' }),
+            el('div.personaje__chips', {}, [chip(sala.nombre, { color: sala.color, punto: true })]),
+          ]),
+        ]),
+      ]),
+      el('div.encabezado__acciones', {}, [
+        mensajes.length > 0 && el('button.boton', { type: 'button', onClick: () => {
+          if (enCurso) enCurso.abort();
+          hilos[personaje.id] = [];
+          guardar();
+          pintar();
+          avisar('Conversación vaciada.');
+        } }, [icono('historial'), 'Vaciar']),
+        el('button.boton', { type: 'button', onClick: () => modalPersonaje(personaje) }, [icono('lapiz'), 'Editar']),
+      ]),
+    ]),
+    !disponible && capacidadesResueltas && el('div.aviso-chat', {}, [
+      icono('escudo'),
+      el('div', {}, [
+        el('strong', { texto: 'Aquí no puedo preguntarle a Claude' }),
+        el('p', { texto: 'Esta copia de la página no tiene esa capacidad concedida. La oficina, las salas y los personajes siguen funcionando; para el chat, usa la app del repositorio con tu clave de API.' }),
+      ]),
+    ]),
+    hilo,
+    compositor,
+  ]);
+}
+
+/* ── Formularios ─────────────────────────────────────────────────────── */
+function modalPersonaje(personaje, salaIdPorDefecto) {
+  const esNuevo = !personaje;
+  const base = personaje || { nombre: '', rol: '', persona: '', estado: 'activo', enlace: '',
+    salaId: salaIdPorDefecto || oficina.salas[0].id };
+
+  const cNombre = el('input', { type: 'text', name: 'nombre', value: base.nombre, maxLength: 60, autocomplete: 'off' });
+  const cRol = el('input', { type: 'text', name: 'rol', value: base.rol, maxLength: 80, autocomplete: 'off' });
+  const cSala = el('select', { name: 'salaId' }, oficina.salas.map((s) =>
+    el('option', { value: s.id, texto: s.nombre, selected: s.id === base.salaId })));
+  const cEstado = el('select', { name: 'estado' }, Object.entries(ESTADOS).map(([k, v]) =>
+    el('option', { value: k, texto: v, selected: k === base.estado })));
+  const cEnlace = el('input', { type: 'url', name: 'enlace', value: base.enlace || '',
+    placeholder: 'https://… (opcional)', autocomplete: 'off' });
+  const cPersona = el('textarea', { name: 'persona', rows: 5, maxLength: 4000,
+    placeholder: 'Eres Nova, arquitecta de software. Respondes en español, con criterio y sin rodeos.' });
+  cPersona.value = base.persona || '';
+
+  const formulario = el('form#form-personaje', { style: 'display:grid;gap:var(--e5)' }, [
+    campo({ etiqueta: 'Nombre', control: cNombre, obligatorio: true }),
+    campo({ etiqueta: 'Rol', pista: 'Cómo lo llamas dentro del equipo.', control: cRol }),
+    el('div.dos', {}, [
+      campo({ etiqueta: 'Sala', control: cSala }),
+      campo({ etiqueta: 'Estado', control: cEstado }),
+    ]),
+    campo({ etiqueta: 'Enlace', pista: 'Para una IA que vive en otra app: la tarjeta abrirá esta dirección.', control: cEnlace }),
+    campo({ etiqueta: 'Persona', pista: 'Define su tono y su forma de responder. Es lo que lo hace suyo.', control: cPersona }),
+  ]);
+
+  const { dialogo, cerrar } = abrirModal({
+    titulo: esNuevo ? 'Nuevo personaje' : 'Editar ' + base.nombre,
+    subtitulo: esNuevo ? 'Registra una IA y ocupará un escritorio en el plano.' : 'Los cambios se ven al instante.',
+    contenido: formulario,
+    acciones: (cerrarModal) => [
+      el('button.boton', { type: 'button', texto: 'Cancelar', onClick: cerrarModal }),
+      el('button.boton.boton--principal.derecha', { type: 'submit', form: 'form-personaje',
+        texto: esNuevo ? 'Crear personaje' : 'Guardar cambios' }),
+    ],
+  });
+
+  formulario.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = cNombre.value.trim();
+    if (!nombre) return void marcarError(dialogo, 'nombre', 'El nombre no puede quedar vacío.');
+    const enlace = cEnlace.value.trim();
+    if (enlace) {
+      let u = null;
+      try { u = new URL(enlace); } catch { /* inválida */ }
+      if (!u || (u.protocol !== 'http:' && u.protocol !== 'https:')) {
+        return void marcarError(dialogo, 'enlace', 'El enlace tiene que empezar por https://');
+      }
+    }
+    const datos = { nombre, rol: cRol.value.trim(), salaId: cSala.value, estado: cEstado.value,
+      enlace, persona: cPersona.value.trim(), ejemplo: false };
+
+    if (esNuevo) {
+      oficina.personajes.push({ id: 'p' + (oficina.siguiente++), ...datos });
+      avisar('"' + nombre + '" ya tiene escritorio.', 'exito');
+    } else {
+      Object.assign(personaje, datos);
+      avisar('Cambios guardados.', 'exito');
+    }
+    guardar();
+    cerrar();
+    pintar();
+  });
+}
+
+function modalSala(sala) {
+  const esNueva = !sala;
+  let color = (sala && sala.color) || PALETA[0][0];
+  let ic = (sala && sala.icono) || 'oficina';
+
+  const cNombre = el('input', { type: 'text', name: 'nombre', value: (sala && sala.nombre) || '', maxLength: 60 });
+  const cDesc = el('textarea', { name: 'descripcion', rows: 3, maxLength: 280,
+    placeholder: 'De qué se ocupa este departamento.' });
+  cDesc.value = (sala && sala.descripcion) || '';
+
+  const paleta = el('div', { role: 'group', 'aria-label': 'Color de la sala',
+    style: 'display:flex;flex-wrap:wrap;gap:var(--e2)' });
+  PALETA.forEach(([valor, nombre]) => {
+    const b = el('button', {
+      type: 'button', title: nombre, 'aria-label': nombre, 'aria-pressed': String(valor === color),
+      style: 'width:40px;height:40px;border:2px solid transparent;border-radius:var(--r2);cursor:pointer;background:' + valor,
+      onClick: () => {
+        color = valor;
+        [...paleta.children].forEach((o) => {
+          const activo = o === b;
+          o.setAttribute('aria-pressed', String(activo));
+          o.style.borderColor = activo ? 'var(--tinta)' : 'transparent';
+        });
+      },
+    });
+    if (valor === color) b.style.borderColor = 'var(--tinta)';
+    paleta.append(b);
+  });
+
+  const iconos = el('div', { role: 'group', 'aria-label': 'Icono de la sala',
+    style: 'display:flex;flex-wrap:wrap;gap:var(--e2)' });
+  ICONOS_SALA.forEach((nombre) => {
+    const b = el('button', {
+      type: 'button', title: nombre, 'aria-label': 'Icono ' + nombre, 'aria-pressed': String(nombre === ic),
+      style: 'display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--linea-fuerte);' +
+             'border-radius:var(--r2);background:var(--superficie);color:var(--tinta-2);cursor:pointer',
+      onClick: () => {
+        ic = nombre;
+        [...iconos.children].forEach((o) => {
+          const activo = o === b;
+          o.setAttribute('aria-pressed', String(activo));
+          o.style.borderColor = activo ? 'var(--tinta)' : 'var(--linea-fuerte)';
+        });
+      },
+    }, [icono(nombre)]);
+    if (nombre === ic) b.style.borderColor = 'var(--tinta)';
+    iconos.append(b);
+  });
+
+  const formulario = el('form#form-sala', { style: 'display:grid;gap:var(--e5)' }, [
+    campo({ etiqueta: 'Nombre', control: cNombre, obligatorio: true }),
+    campo({ etiqueta: 'Descripción', control: cDesc }),
+    el('div.campo', {}, [
+      el('span.campo__et', { texto: 'Color' }), paleta,
+      el('p.campo__pista', { texto: 'El texto sobre este color se ajusta solo para mantener el contraste mínimo AA.' }),
+    ]),
+    el('div.campo', {}, [el('span.campo__et', { texto: 'Icono' }), iconos]),
+  ]);
+
+  const { dialogo, cerrar } = abrirModal({
+    titulo: esNueva ? 'Nueva sala' : 'Editar ' + sala.nombre,
+    subtitulo: esNueva ? 'Se colocará sola en el primer hueco libre del plano.' : 'Cambia su nombre, su color o su icono.',
+    contenido: formulario,
+    acciones: (cerrarModal) => [
+      !esNueva && el('button.boton.boton--peligro', { type: 'button', texto: 'Eliminar sala', onClick: () => {
+        if (enSala(sala.id).length) {
+          avisar('Primero mueve o elimina los ' + enSala(sala.id).length + ' personajes de esta sala.', 'error');
+          return;
+        }
+        if (oficina.salas.length <= 1) { avisar('La oficina necesita al menos una sala.', 'error'); return; }
+        oficina.salas = oficina.salas.filter((s) => s.id !== sala.id);
+        guardar();
+        cerrarModal();
+        irAPlano();
+        avisar('Sala "' + sala.nombre + '" eliminada.');
+      } }),
+      el('button.boton.derecha', { type: 'button', texto: 'Cancelar', onClick: cerrarModal }),
+      el('button.boton.boton--principal', { type: 'submit', form: 'form-sala',
+        texto: esNueva ? 'Crear sala' : 'Guardar cambios' }),
+    ],
+  });
+
+  formulario.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = cNombre.value.trim();
+    if (!nombre) return void marcarError(dialogo, 'nombre', 'El nombre no puede quedar vacío.');
+    const descripcion = cDesc.value.trim();
+
+    if (esNueva) {
+      const hueco = primeraLibre(oficina.salas);
+      const slug = normal(nombre).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'sala';
+      const nueva = { id: 's' + (oficina.siguienteSala++), slug, nombre, descripcion, color, icono: ic, ...hueco };
+      oficina.salas.push(nueva);
+      guardar();
+      cerrar();
+      irASala(nueva.id);
+      avisar('Sala "' + nombre + '" abierta.', 'exito');
+    } else {
+      Object.assign(sala, { nombre, descripcion, color, icono: ic });
+      guardar();
+      cerrar();
+      pintar();
+      avisar('Sala actualizada.', 'exito');
+    }
+  });
+}
+
+/* ── Acciones ────────────────────────────────────────────────────────── */
+function eliminarPersonaje(personaje) {
+  const indice = oficina.personajes.indexOf(personaje);
+  if (indice < 0) return;
+  const copiaHilo = hilos[personaje.id];
+  oficina.personajes.splice(indice, 1);
+  delete hilos[personaje.id];
+  guardar();
+  pintar();
+  avisar('"' + personaje.nombre + '" salió de la oficina.', 'info', {
+    texto: 'Deshacer',
+    alPulsar: () => {
+      oficina.personajes.splice(indice, 0, personaje);
+      if (copiaHilo) hilos[personaje.id] = copiaHilo;
+      guardar();
+      pintar();
+      avisar('"' + personaje.nombre + '" volvió a su escritorio.', 'exito');
+    },
+  });
+}
+
+function quitarEjemplos() {
+  const quitados = oficina.personajes.filter((p) => p.ejemplo);
+  if (!quitados.length) return;
+  const hilosQuitados = {};
+  quitados.forEach((p) => { if (hilos[p.id]) { hilosQuitados[p.id] = hilos[p.id]; delete hilos[p.id]; } });
+  oficina.personajes = oficina.personajes.filter((p) => !p.ejemplo);
+  guardar();
+  pintar();
+  avisar('Fuera los ' + quitados.length + ' personajes de ejemplo. La oficina es tuya.', 'info', {
+    texto: 'Deshacer',
+    alPulsar: () => {
+      oficina.personajes = oficina.personajes.concat(quitados);
+      Object.assign(hilos, hilosQuitados);
+      guardar();
+      pintar();
+    },
+  });
+}
+
+/* ── Navegación ──────────────────────────────────────────────────────── */
+function irAPlano() { if (enCurso) enCurso.abort(); vista = { tipo: 'plano' }; consultaSala = ''; pintar(); scrollTo({ top: 0 }); }
+function irASala(salaId) { if (enCurso) enCurso.abort(); vista = { tipo: 'sala', salaId }; consultaSala = ''; pintar(); scrollTo({ top: 0 }); }
+function irAChat(personajeId) { if (enCurso) enCurso.abort(); vista = { tipo: 'chat', personajeId }; pintar(); scrollTo({ top: 0 }); }
+
+/* ── Pintado ─────────────────────────────────────────────────────────── */
+function pintar({ focoBusqueda = false } = {}) {
+  const lienzo = document.getElementById('lienzo');
+  const pie = document.getElementById('marca-pie');
+  const seleccion = focoBusqueda ? document.activeElement && document.activeElement.selectionStart : null;
+
+  let contenido;
+  if (vista.tipo === 'sala') {
+    contenido = vistaSala();
+    const s = oficina.salas.find((x) => x.id === vista.salaId);
+    pie.textContent = s ? s.nombre : 'Sala';
+  } else if (vista.tipo === 'chat') {
+    contenido = vistaChat();
+    const p = oficina.personajes.find((x) => x.id === vista.personajeId);
+    pie.textContent = p ? p.nombre : 'Personaje';
+  } else {
+    contenido = vistaPlano();
+    const n = oficina.personajes.length;
+    pie.textContent = oficina.salas.length + ' salas · ' + n + ' personaje' + (n === 1 ? '' : 's');
+  }
+  poner(lienzo, contenido);
+
+  if (focoBusqueda) {
+    const busqueda = lienzo.querySelector('input[type="search"]');
+    if (busqueda) {
+      busqueda.focus();
+      const fin = busqueda.value.length;
+      busqueda.setSelectionRange(seleccion ?? fin, seleccion ?? fin);
+    }
+  }
+  if (vista.tipo === 'chat') {
+    const campoChat = lienzo.querySelector('.compositor__campo');
+    if (campoChat && !campoChat.disabled) campoChat.focus({ preventScroll: true });
+  }
+}
+
+/* ── Tema ────────────────────────────────────────────────────────────── */
+const botonTema = document.getElementById('tema');
+function pintarTema() {
+  const oscuro = esOscuro();
+  poner(botonTema, icono(oscuro ? 'sol' : 'luna'));
+  botonTema.setAttribute('aria-label', oscuro ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro');
+  botonTema.title = oscuro ? 'Tema claro' : 'Tema oscuro';
+}
+botonTema.addEventListener('click', () => {
+  document.documentElement.dataset.theme = esOscuro() ? 'light' : 'dark';
+  try { localStorage.setItem(CLAVE + '.tema', document.documentElement.dataset.theme); } catch { /* da igual */ }
+  pintarTema();
+  pintar();   // los tonos de cada sala se recalculan contra el fondo nuevo
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (!document.documentElement.dataset.theme) { pintarTema(); pintar(); }
+});
+try {
+  const t = localStorage.getItem(CLAVE + '.tema');
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+} catch { /* modo privado */ }
+
+document.getElementById('ir-plano').addEventListener('click', irAPlano);
+
+/* ── Arranque ────────────────────────────────────────────────────────── */
+const guardado = leerLocal();
+if (guardado) {
+  oficina = { salas: guardado.salas, personajes: guardado.personajes || [],
+    siguiente: guardado.siguiente || 1, siguienteSala: guardado.siguienteSala || 1 };
+  hilos = guardado.hilos || {};
+}
+pintarTema();
+pintar();
+conectarCapacidades();
+</script>

@@ -15,6 +15,20 @@ persona, su modelo y su historial.
 
 ---
 
+## 0. Verla sin instalar nada
+
+`demo/oficina.html` es la oficina entera en un solo archivo: ábrelo con doble clic y
+ahí está el plano, las salas, los personajes y el chat. No necesita servidor, ni
+`npm install`, ni `.env`, ni credenciales de Google.
+
+Es una **versión autónoma**, no la app: guarda en el navegador (o en el almacén del
+artefacto, si la abres publicada) en vez de en SQLite, y para que los personajes
+respondan usa la capacidad de preguntar a Claude de la propia página, no tu clave de
+API. Sirve para enseñar la oficina y para montar tu plantilla; lo de abajo es el
+producto de verdad.
+
+---
+
 ## 1. Arrancarlo en local (5 minutos)
 
 Necesitas **Node.js 20.11 o superior**. Nada más: no hay Docker, ni servidor de base
@@ -197,6 +211,7 @@ Oficina-IA/
 │       ├── api.js · dom.js · color.js · iconos.js · piezas.js
 │       └── tema.js · notificaciones.js
 │
+├── demo/oficina.html          La oficina en un archivo, sin servidor (ver §0)
 ├── pruebas/
 │   ├── oficina.prueba.js      Extremo a extremo de la Fase 1
 │   ├── chat.prueba.js         Extremo a extremo del chat
