@@ -10,7 +10,7 @@
 | Fase | Alcance | Estado |
 | --- | --- | --- |
 | **Fase 1** | Cimientos + oficina visual (login Google, SQLite, plano SVG, CRUD de salas y personajes) | ✅ **Implementada** |
-| Fase 2 | Personajes con vida (chat real vía API de Anthropic, historial, selector de proveedor) | ⬜ Pendiente |
+| **Fase 2** | Personajes con vida (chat real en streaming, historial, un adaptador por proveedor) | ✅ **Implementada** |
 | Fase 3 | Skills (Markdown + frontmatter, asignación por personaje, inyección en contexto) | ⬜ Pendiente |
 | Fase 4 | Conectores (cliente MCP en el backend, permisos por personaje) | ⬜ Pendiente |
 | Fase 5 | Multiusuario, pulido y despliegue (roles, más proveedores de login, Turso) | ⬜ Pendiente |
@@ -85,8 +85,7 @@ conectores.
 
 ## Modelo de datos
 
-Tablas implementadas en la Fase 1 (esquema real en
-`servidor/base-datos/migraciones.js`):
+Tablas implementadas (esquema real en `servidor/base-datos/migraciones.js`):
 
 - `usuarios`: id, email, nombre, avatar_url, proveedor_auth, proveedor_id, rol,
   creado_en, ultimo_acceso_en
@@ -96,11 +95,12 @@ Tablas implementadas en la Fase 1 (esquema real en
   proveedor_ia (`anthropic` | `openai` | `google` | `externo`), modelo,
   enlace_externo, estado, orden
 - `sesiones`: almacén de sesión de Express sobre la misma base SQLite
+- `conversaciones`: id, personaje_id, usuario_id, titulo, archivada, creado_en, actualizado_en
+- `mensajes`: id, conversacion_id, rol (`user`|`assistant`|`system`), contenido,
+  razonamiento, modelo, proveedor_ia, tokens_entrada, tokens_salida, error, creado_en
 
 Tablas previstas para fases siguientes (todavía **no** creadas):
 
-- `conversaciones`: id, personaje_id, usuario_id, creado_en
-- `mensajes`: id, conversacion_id, rol (`user`|`assistant`|`system`), contenido, creado_en
 - `skills`: id, slug, nombre, descripcion, contenido_markdown, etiquetas
 - `personaje_skills`: personaje_id, skill_id
 - `conectores`: id, nombre, tipo (`mcp_server`), config_json, alcance (`global`|`por_personaje`)
@@ -173,9 +173,11 @@ Cada IA es un personaje con:
   de salas (SVG clicable) que lleva a la vista interior con las tarjetas de
   personajes; CRUD de salas y personajes desde la propia interfaz. Sin chat real
   todavía.
-- **Fase 2 — Personajes con vida**: integración con la API de Anthropic como proveedor
-  por defecto; `persona_prompt` como system prompt; historial persistente; selector de
-  proveedor por personaje; interfaz de chat dentro de cada personaje.
+- **Fase 2 — Personajes con vida** *(hecha)*: integración con la API de Anthropic
+  (SDK oficial, streaming) como proveedor por defecto y adaptadores por HTTP directo
+  para OpenAI y Google; `persona_prompt` como system prompt; historial persistente por
+  usuario y personaje, con hilos anteriores consultables; interfaz de chat con
+  Markdown, razonamiento resumido y botón de detener.
 - **Fase 3 — Skills**: formato de archivo (Markdown + frontmatter); pantalla para
   subir/editar skills; asignación a personajes; inyección en el contexto.
 - **Fase 4 — Conectores (MCP)**: cliente MCP en el backend; reutilización de servidores
@@ -183,6 +185,24 @@ Cada IA es un personaje con:
 - **Fase 5 — Multiusuario, pulido y despliegue**: roles admin/miembro; proveedores de
   login adicionales; despliegue en hosting ligero + SQLite alojada (Turso); revisión
   de accesibilidad y rendimiento con el mismo estándar que la v1.
+
+## Cómo está montado el chat (Fase 2)
+
+- `servidor/ia/` tiene **un archivo por proveedor**, todos con la misma forma: un
+  generador `conversar()` que va soltando `{tipo: 'texto'|'razonamiento'|'fin'}`. El
+  resto del backend no sabe con quién habla. Añadir un proveedor es un archivo nuevo y
+  una línea en `proveedores.js`.
+- Anthropic usa el **SDK oficial** (`@anthropic-ai/sdk`) con `messages.stream()`,
+  pensamiento adaptativo en modo resumido y `cache_control` sobre el prefijo de la
+  conversación. OpenAI y Google van por HTTP directo contra su SSE: son cuarenta
+  líneas cada uno y evitan sumar dos dependencias más.
+- La respuesta viaja al navegador como **SSE** desde `POST /api/personajes/:id/mensajes`.
+  El turno se guarda siempre: si el proveedor falla, si el modelo declina o si quien
+  pregunta pulsa "Detener", queda registrado con su motivo en la columna `error`.
+- Un turno con error **no se reenvía** como contexto en el turno siguiente.
+- El Markdown de las respuestas se compone en `publico/js/markdown.js` a mano, con
+  nodos del DOM. Es texto que no controlamos: nunca pasa por `innerHTML` y los
+  enlaces se limitan a `http`/`https`.
 
 ## Convenciones de código
 

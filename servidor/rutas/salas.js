@@ -3,6 +3,7 @@ import { Router } from 'express';
 import * as salas from '../repositorios/salas.js';
 import * as personajes from '../repositorios/personajes.js';
 import { requiereAdmin } from '../autenticacion/guardias.js';
+import { conEstadoChat } from '../ia/proveedores.js';
 
 export const rutasSalas = Router();
 
@@ -13,7 +14,7 @@ rutasSalas.get('/', (_peticion, respuesta) => {
 rutasSalas.get('/:slug', (peticion, respuesta, siguiente) => {
   try {
     const sala = salas.exigirPorSlug(peticion.params.slug);
-    respuesta.json({ sala, personajes: personajes.listarPorSala(sala.id) });
+    respuesta.json({ sala, personajes: personajes.listarPorSala(sala.id).map(conEstadoChat) });
   } catch (error) {
     siguiente(error);
   }

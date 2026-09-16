@@ -69,6 +69,45 @@ const migraciones = [
       CREATE INDEX idx_sesiones_expira ON sesiones (expira);
     `);
   },
+
+  // 2 — Fase 2: conversaciones y mensajes de cada personaje.
+  (db) => {
+    db.exec(`
+      CREATE TABLE conversaciones (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        personaje_id   INTEGER NOT NULL REFERENCES personajes (id) ON DELETE CASCADE,
+        usuario_id     INTEGER NOT NULL REFERENCES usuarios (id)   ON DELETE CASCADE,
+        titulo         TEXT    NOT NULL DEFAULT '',
+        archivada      INTEGER NOT NULL DEFAULT 0,
+        creado_en      TEXT    NOT NULL,
+        actualizado_en TEXT    NOT NULL
+      );
+
+      -- Una conversación abierta por personaje y usuario: es la que se muestra al entrar.
+      CREATE INDEX idx_conversaciones_abiertas
+        ON conversaciones (personaje_id, usuario_id, archivada, id DESC);
+
+      CREATE TABLE mensajes (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversacion_id INTEGER NOT NULL REFERENCES conversaciones (id) ON DELETE CASCADE,
+        rol             TEXT    NOT NULL CHECK (rol IN ('user', 'assistant', 'system')),
+        contenido       TEXT    NOT NULL DEFAULT '',
+        -- Resumen del razonamiento, cuando el modelo lo devuelve. Nunca es el
+        -- razonamiento en crudo: la API no lo expone.
+        razonamiento    TEXT,
+        modelo          TEXT,
+        proveedor_ia    TEXT,
+        tokens_entrada  INTEGER,
+        tokens_salida   INTEGER,
+        -- Si la respuesta se cortó o falló, el motivo queda aquí y la fila se
+        -- guarda igual: el hilo no puede mentir sobre lo que pasó.
+        error           TEXT,
+        creado_en       TEXT    NOT NULL
+      );
+
+      CREATE INDEX idx_mensajes_conversacion ON mensajes (conversacion_id, id);
+    `);
+  },
 ];
 
 export function aplicarMigraciones(db) {

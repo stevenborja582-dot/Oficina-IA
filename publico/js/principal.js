@@ -10,6 +10,7 @@ import { aplicarTemaInicial, alCambiarTema, conectarBotonTema } from './tema.js'
 import { avisar, avisarError } from './notificaciones.js';
 import { vistaPlano } from './vista-plano.js';
 import { vistaSala } from './vista-sala.js';
+import { vistaChat } from './vista-chat.js';
 import { modalPersonaje } from './modal-personaje.js';
 import { modalSala } from './modal-sala.js';
 import { avatar } from './piezas.js';
@@ -131,9 +132,34 @@ function rutaActual() {
   return { vista: vista || 'plano', parametro };
 }
 
+/** Avisa a la vista saliente para que corte lo que tenga en vuelo (una respuesta a medias). */
+function despedirVista() {
+  contenido.firstElementChild?.dispatchEvent(new CustomEvent('oficina:salir'));
+}
+
 function pintarVista() {
   if (!estado) return;
+  despedirVista();
   const { vista, parametro } = rutaActual();
+
+  if (vista === 'chat' && parametro) {
+    const personaje = estado.personajes.find((entrada) => entrada.id === Number(parametro));
+    if (!personaje) {
+      reemplazar(
+        contenido,
+        elemento('div.error-vista', {}, [
+          elemento('h1', { texto: 'Ese personaje ya no está' }),
+          elemento('p', { texto: 'Puede que lo hayas eliminado desde otra pestaña.' }),
+          elemento('a.boton', { href: '#/', texto: 'Volver al plano' }),
+        ]),
+      );
+      document.title = 'Personaje no encontrado · Oficina Black Hole';
+      return;
+    }
+    reemplazar(contenido, vistaChat(estado, personaje, acciones));
+    document.title = `${personaje.nombre} · Oficina Black Hole`;
+    return;
+  }
 
   if (vista === 'sala' && parametro) {
     const sala = estado.salas.find((entrada) => entrada.slug === parametro);

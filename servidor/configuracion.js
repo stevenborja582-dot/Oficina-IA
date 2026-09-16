@@ -76,6 +76,36 @@ export const configuracion = {
   correosPermitidos: lista('CORREOS_PERMITIDOS'),
   permitirDemo,
   rutaPublico: path.join(RAIZ, 'publico'),
+
+  /**
+   * Claves de los proveedores de IA. Viven solo aquí, en el servidor: el navegador
+   * nunca las ve. Cada personaje elige su proveedor; si falta la clave, la interfaz
+   * lo dice en vez de fallar a medio chat.
+   */
+  ia: {
+    anthropic: {
+      clave: texto('ANTHROPIC_API_KEY'),
+      // Modelo por defecto cuando el personaje no especifica uno.
+      modeloPorDefecto: texto('MODELO_ANTHROPIC', 'claude-opus-5'),
+      // Solo se toca para apuntar a una pasarela propia o a un servidor de pruebas.
+      urlBase: texto('ANTHROPIC_URL_BASE'),
+    },
+    openai: {
+      clave: texto('OPENAI_API_KEY'),
+      modeloPorDefecto: texto('MODELO_OPENAI'),
+      urlBase: texto('OPENAI_URL_BASE', 'https://api.openai.com/v1'),
+    },
+    google: {
+      clave: texto('GOOGLE_AI_API_KEY'),
+      modeloPorDefecto: texto('MODELO_GOOGLE'),
+      urlBase: texto('GOOGLE_AI_URL_BASE', 'https://generativelanguage.googleapis.com/v1beta'),
+    },
+    // Techo de tokens de salida por respuesta. Es un límite, no un objetivo:
+    // solo se paga lo que se genera.
+    maximoTokens: Math.max(256, numero('IA_MAXIMO_TOKENS', 32000)),
+    // Cuántos mensajes previos se reenvían como contexto.
+    mensajesDeContexto: Math.max(2, numero('IA_MENSAJES_CONTEXTO', 40)),
+  },
 };
 
 /** Comprobaciones que deben hacer fallar el arranque antes de escuchar en el puerto. */

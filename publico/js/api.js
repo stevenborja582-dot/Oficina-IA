@@ -56,4 +56,78 @@ export const api = {
   restaurarPersonaje: (personaje) => pedir('/api/personajes/restaurar', { metodo: 'POST', cuerpo: { personaje } }),
 
   salir: () => pedir('/auth/salir', { metodo: 'POST' }),
+
+  // — Chat (Fase 2) ——————————————————————————————————————————————
+  conversacion: (personajeId) => pedir(`/api/personajes/${personajeId}/conversacion`),
+  conversacionArchivada: (personajeId, conversacionId) =>
+    pedir(`/api/personajes/${personajeId}/conversacion/${conversacionId}`),
+  nuevaConversacion: (personajeId) =>
+    pedir(`/api/personajes/${personajeId}/conversacion/nueva`, { metodo: 'POST' }),
+  borrarMensaje: (personajeId, mensajeId) =>
+    pedir(`/api/personajes/${personajeId}/mensajes/${mensajeId}`, { metodo: 'DELETE' }),
 };
+
+/**
+ * Manda un mensaje y va devolviendo la respuesta a trozos, según llega.
+ * Es un generador para que quien lo use escriba un `for await` normal en vez de
+ * enredarse con callbacks.
+ */
+export async function* flujoMensaje(personajeId, texto, senal) {
+  let respuesta;
+  try {
+    respuesta = await fetch(`/api/personajes/${personajeId}/mensajes`, {
+      method: 'POST',
+      headers: {
+        Accept: 'text/event-stream',
+        'Content-Type': 'application/json',
+        'X-Peticion-Oficina': '1',
+      },
+      body: JSON.stringify({ texto }),
+      credentials: 'same-origin',
+      signal: senal,
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+    throw new ErrorApi('No hay conexión con el servidor de la oficina.', 0);
+  }
+
+  if (respuesta.status === 401) {
+    window.location.assign('/entrar');
+    throw new ErrorApi('Sesión caducada.', 401);
+  }
+
+  if (!respuesta.ok) {
+    const datos = await respuesta.json().catch(() => ({}));
+    throw new ErrorApi(datos.error || 'No se pudo enviar el mensaje.', respuesta.status, datos.detalles);
+  }
+
+  const lector = respuesta.body.getReader();
+  const decodificador = new TextDecoder();
+  let pendiente = '';
+
+  try {
+    while (true) {
+      const { done, value } = await lector.read();
+      if (done) break;
+
+      pendiente += decodificador.decode(value, { stream: true });
+      const bloques = pendiente.split('\n\n');
+      // El último trozo puede estar cortado por la mitad: espera a la vuelta siguiente.
+      pendiente = bloques.pop() ?? '';
+
+      for (const bloque of bloques) {
+        const linea = bloque.split('\n').find((entrada) => entrada.startsWith('data: '));
+        if (!linea) continue;
+        try {
+          yield JSON.parse(linea.slice(6));
+        } catch {
+          // Un evento ilegible no debe tumbar el hilo entero.
+        }
+      }
+    }
+  } catch (error) {
+    if (error?.name !== 'AbortError') throw error;
+  } finally {
+    lector.releaseLock();
+  }
+}

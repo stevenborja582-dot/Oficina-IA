@@ -1,0 +1,358 @@
+/* ============================================================================
+   Chat con un personaje.
+   La columna se estrecha a propósito: 70-80 caracteres por línea es lo que se
+   lee cómodo, y una respuesta larga a 1200 px de ancho no la lee nadie.
+   ========================================================================= */
+
+.chat {
+  --ancho-hilo: 780px;
+  display: flex;
+  flex-direction: column;
+  max-width: var(--ancho-hilo);
+  margin-inline: auto;
+}
+
+/* En el chat manda la conversación: el hueco de más bajo el compositor sobra. */
+.principal:has(.chat) { padding-bottom: var(--e4); }
+
+.chat-cabecera { margin-bottom: var(--e5); }
+.chat-cabecera .sala-cabecera { margin-top: var(--e3); }
+.chat-cabecera .personaje__chips { margin-top: var(--e2); }
+
+/* ── Avisos de la parte superior ─────────────────────────────────────────── */
+
+.chat-aviso,
+.chat-archivado {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  padding: var(--e4);
+  margin-bottom: var(--e5);
+  border: 1px solid var(--acento-borde);
+  border-radius: var(--radio-3);
+  background: var(--acento-suave);
+  color: var(--tinta);
+  font-size: var(--t-ui);
+}
+.chat-aviso p { margin-top: 2px; color: var(--tinta-2); font-size: var(--t-micro); }
+.chat-aviso__icono { width: 20px; height: 20px; flex: none; color: var(--acento); }
+
+.chat-archivado {
+  flex-wrap: wrap;
+  border-color: var(--linea-fuerte);
+  background: var(--superficie-2);
+  color: var(--tinta-2);
+  font-size: var(--t-micro);
+}
+.chat-archivado .boton { margin-left: auto; }
+
+/* ── El hilo ─────────────────────────────────────────────────────────────── */
+
+.hilo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e6);
+  min-height: 30vh;
+}
+
+.turno { display: flex; gap: var(--e3); }
+
+/* — Turno de quien pregunta — */
+
+.turno--usuario {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--e1);
+}
+
+.burbuja {
+  max-width: min(90%, 560px);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-3) var(--radio-3) var(--radio-1) var(--radio-3);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+}
+.burbuja__texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.turno__hora { font-size: var(--t-nano); color: var(--tinta-3); }
+
+/* — Turno del personaje — */
+
+.turno--asistente { align-items: flex-start; }
+.turno__columna { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--e3); }
+
+.turno--pensando .turno__columna::after {
+  content: 'Pensando…';
+  font-size: var(--t-micro);
+  color: var(--tinta-3);
+  animation: pulso-pensando 1.5s ease-in-out infinite;
+}
+@keyframes pulso-pensando {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.turno__contenido { overflow-wrap: anywhere; }
+
+/* Cursor parpadeante mientras la respuesta se está escribiendo. */
+.turno__contenido--escribiendo > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--acento);
+  animation: parpadeo 1s steps(2, start) infinite;
+}
+@keyframes parpadeo { 50% { opacity: 0; } }
+
+.turno__pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  font-size: var(--t-nano);
+  color: var(--tinta-3);
+}
+
+.turno__aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  border: 1px solid var(--peligro-borde);
+  border-radius: var(--radio-2);
+  background: var(--peligro-suave);
+  color: var(--peligro);
+  font-size: var(--t-micro);
+}
+.turno__aviso-icono { width: 16px; height: 16px; flex: none; }
+
+/* — Razonamiento — */
+
+.razonamiento {
+  align-self: flex-start;
+  max-width: 100%;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-2);
+  background: var(--superficie-2);
+}
+.razonamiento__resumen {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  color: var(--tinta-3);
+  font-size: var(--t-micro);
+  font-weight: 540;
+  cursor: pointer;
+  list-style: none;
+}
+.razonamiento__resumen::-webkit-details-marker { display: none; }
+.razonamiento__resumen:hover { color: var(--tinta-2); }
+.razonamiento__icono { width: 14px; height: 14px; }
+.razonamiento[open] .razonamiento__resumen { border-bottom: 1px solid var(--linea); }
+.razonamiento__texto {
+  padding: var(--e3);
+  color: var(--tinta-2);
+  font-size: var(--t-micro);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ── Estado inicial ──────────────────────────────────────────────────────── */
+
+.chat-vacio {
+  display: grid;
+  justify-items: center;
+  gap: var(--e3);
+  padding: var(--e9) var(--e5);
+  text-align: center;
+}
+.chat-vacio p {
+  max-width: 52ch;
+  color: var(--tinta-2);
+  font-size: var(--t-ui);
+  font-style: italic;
+}
+
+/* ── Compositor ──────────────────────────────────────────────────────────── */
+
+.compositor {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  gap: var(--e2);
+  padding-top: var(--e5);
+  padding-bottom: var(--e4);
+  margin-top: var(--e6);
+  /* El degradado evita que el último mensaje se corte de golpe contra la barra. */
+  background: linear-gradient(to bottom, transparent, var(--lienzo) 28%);
+}
+
+.compositor__caja {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--e2);
+  padding: var(--e2);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-3);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+  transition: border-color var(--rapido) var(--curva), box-shadow var(--rapido) var(--curva);
+}
+.compositor__caja:focus-within {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 20%, transparent), var(--sombra-2);
+}
+
+.compositor__campo {
+  flex: 1;
+  min-height: 40px;
+  max-height: 220px;
+  padding: var(--e2) var(--e3);
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font-size: var(--t-cuerpo);
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+}
+.compositor__campo::placeholder { color: var(--tinta-3); }
+.compositor__campo:disabled { cursor: not-allowed; }
+
+.compositor__enviar { flex: none; }
+.compositor__pista {
+  font-size: var(--t-nano);
+  color: var(--tinta-3);
+  text-align: right;
+}
+@media (max-width: 719px) {
+  .compositor__pista { display: none; }
+}
+
+/* ── Historial de conversaciones ─────────────────────────────────────────── */
+
+.historial { display: grid; gap: var(--e2); }
+
+.historial__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  width: 100%;
+  padding: var(--e3);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-2);
+  background: var(--superficie);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--rapido) var(--curva), background var(--rapido) var(--curva);
+}
+.historial__fila:hover { border-color: var(--tinta-3); background: var(--superficie-2); }
+.historial__texto { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.historial__titulo {
+  font-size: var(--t-ui);
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.historial__meta { font-size: var(--t-micro); color: var(--tinta-3); }
+.historial__fila svg { width: 16px; height: 16px; flex: none; color: var(--tinta-3); }
+
+/* ============================================================================
+   Markdown de las respuestas
+   ========================================================================= */
+
+.md { display: flex; flex-direction: column; gap: var(--e4); }
+
+.md__parrafo { line-height: 1.68; }
+.md__titulo { margin-top: var(--e2); }
+.md__titulo:first-child { margin-top: 0; }
+
+.md__lista { padding-left: var(--e5); display: grid; gap: var(--e2); }
+.md__lista li { line-height: 1.6; }
+.md__lista li::marker { color: var(--tinta-3); }
+
+.md__cita {
+  padding-left: var(--e4);
+  border-left: 2px solid var(--linea-fuerte);
+  color: var(--tinta-2);
+}
+
+.md__regla { border: 0; border-top: 1px solid var(--linea); }
+
+.md__enlace { color: var(--acento); text-decoration: underline; }
+.md__enlace:hover { color: var(--acento-fuerte); }
+
+.md__codigo {
+  padding: 2px 5px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-1);
+  background: var(--superficie-2);
+  font-family: var(--fuente-mono);
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+}
+
+.md__bloque {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-2);
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+.md__bloque-cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e1) var(--e1) var(--e1) var(--e3);
+  border-bottom: 1px solid var(--linea);
+  color: var(--tinta-3);
+}
+.md__bloque-cabecera .mono { text-transform: lowercase; }
+
+.md__copiar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  border: 1px solid transparent;
+  border-radius: var(--radio-1);
+  background: transparent;
+  color: var(--tinta-3);
+  cursor: pointer;
+  transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva);
+}
+.md__copiar:hover { background: var(--superficie-3); color: var(--tinta); }
+.md__copiar svg { width: 15px; height: 15px; }
+.md__copiar--hecho { color: var(--exito); }
+
+.md__pre {
+  padding: var(--e4);
+  overflow-x: auto;
+  font-family: var(--fuente-mono);
+  font-size: var(--t-micro);
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+@media (max-width: 719px) {
+  .md__copiar { width: 40px; height: 40px; }
+  .burbuja { max-width: 100%; }
+
+  /* La cabecera se encoge para que el hilo empiece cuanto antes. */
+  .chat-cabecera { margin-bottom: var(--e4); }
+  .chat-cabecera .avatar { --avatar-tamano: 40px; }
+  .chat-cabecera .sala-cabecera { gap: var(--e3); }
+  .chat-cabecera .encabezado { gap: var(--e3); }
+  .chat-cabecera .encabezado__acciones { gap: var(--e2); }
+  .chat-cabecera .encabezado__acciones .boton { padding-inline: var(--e3); }
+  /* Solo el icono: la acción se entiende y se gana media pantalla. */
+  .chat-cabecera .encabezado__acciones .boton__texto { display: none; }
+  .chat-cabecera .encabezado__acciones .boton--acento .boton__texto { display: inline; }
+}

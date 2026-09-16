@@ -1,16 +1,16 @@
-# Oficina Black Hole v2 — Fase 1
+# Oficina Black Hole v2 — Fases 1 y 2
 
 Plano interactivo de una oficina donde cada **sala** es un departamento y cada
-**personaje** es una de tus IAs. Esta fase deja la aplicación funcionando de punta a
-punta: entras con Google, ves el plano, entras en una sala y das de alta, editas y
-borras personajes. El chat real llega en la Fase 2.
+**personaje** es una de tus IAs. Entras con Google, ves el plano, entras en una sala,
+das de alta a tus personajes **y hablas con ellos de verdad**: cada uno con su
+persona, su modelo y su historial.
 
 ```
-┌─ Plano (SVG clicable) ─────────────────┐      ┌─ Sala por dentro ──────────┐
-│  Desarrollo │ Diseño │ Asistencia      │  →   │  [avatar] Claude Code      │
-│ ─────────── PASILLO ───────────────    │      │  Ingeniero de par          │
-│  Contenido  │ Automat. │ General       │      │  Claude · claude-opus-5    │
-└────────────────────────────────────────┘      └────────────────────────────┘
+┌─ Plano (SVG clicable) ─────────────────┐   ┌─ Sala ──────────┐   ┌─ Chat ─────────────┐
+│  Desarrollo │ Diseño │ Asistencia      │ → │ [NO] Nova       │ → │  ¿Por dónde empiezo?│
+│ ─────────── PASILLO ───────────────    │   │ Arquitecta      │   │  ▸ Cómo lo pensó    │
+│  Contenido  │ Automat. │ General       │   │ Claude · opus-5 │   │  Tres pasos: …      │
+└────────────────────────────────────────┘   └─────────────────┘   └─────────────────────┘
 ```
 
 ---
@@ -39,6 +39,10 @@ Abre **http://localhost:3000**.
 Sin credenciales de Google todavía, entra con el botón **“Entrar en modo demo”**: crea
 un usuario local y te deja usar toda la aplicación. El primer usuario que entra queda
 como administrador.
+
+Para que los personajes respondan necesitas además una clave de IA — basta con
+`ANTHROPIC_API_KEY`. Sin ella la oficina funciona igual, pero el botón “Chatear”
+aparece apagado y explica qué falta.
 
 ### Órdenes disponibles
 
@@ -82,6 +86,23 @@ repositorio.
 | `GOOGLE_CLIENT_SECRET` | Secreto de ese mismo cliente. |
 | `ADMINS` | Correos (separados por comas) que entran como administradores. El primer usuario registrado siempre es admin. |
 | `CORREOS_PERMITIDOS` | Si está vacío, entra cualquier cuenta de Google. Si pones correos o dominios (`@midominio.com`), solo esos. |
+
+### Proveedores de IA (Fase 2)
+
+Solo hace falta la clave del proveedor que uses. Cada personaje elige el suyo en su
+ficha; si falta la clave, la interfaz lo dice **antes** de que escribas nada.
+
+| Variable | Para qué sirve |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Clave de <https://console.anthropic.com>. Es el proveedor por defecto. |
+| `MODELO_ANTHROPIC` | Modelo para los personajes de Anthropic que no indiquen uno. Por defecto `claude-opus-5`. |
+| `OPENAI_API_KEY` | Opcional, de <https://platform.openai.com/api-keys>. |
+| `MODELO_OPENAI` | Si lo dejas vacío, cada personaje de OpenAI tiene que indicar su modelo en su ficha. |
+| `GOOGLE_AI_API_KEY` | Opcional, de <https://aistudio.google.com/apikey>. |
+| `MODELO_GOOGLE` | Igual que el anterior, para Gemini. |
+| `IA_MAXIMO_TOKENS` | Techo de tokens por respuesta (por defecto `32000`). Es un límite, no un objetivo: solo se paga lo generado. |
+| `IA_MENSAJES_CONTEXTO` | Cuántos mensajes previos se reenvían como contexto (por defecto `40`). |
+| `ANTHROPIC_URL_BASE` | Solo si hablas con Anthropic a través de una pasarela propia. Vacío = API oficial. |
 
 ### Solo desarrollo
 
@@ -148,8 +169,14 @@ Oficina-IA/
 │   ├── middlewares/
 │   │   ├── seguridad.js       CSP y demás cabeceras + comprobación de origen
 │   │   └── manejo-errores.js  Respuestas de error homogéneas
-│   ├── repositorios/          Todo el SQL vive aquí (usuarios, salas, personajes)
-│   ├── rutas/                 autenticacion · api · salas · personajes
+│   ├── ia/                    Un archivo por proveedor, todos con la misma forma
+│   │   ├── proveedores.js     Registro: qué proveedor mueve a cada personaje
+│   │   ├── anthropic.js       SDK oficial, streaming, pensamiento resumido
+│   │   ├── openai.js          HTTP directo contra su SSE
+│   │   ├── google.js          Ídem para Gemini
+│   │   └── sse.js             Lector de Server-Sent Events compartido
+│   ├── repositorios/          Todo el SQL vive aquí (usuarios, salas, personajes, conversaciones)
+│   ├── rutas/                 autenticacion · api · salas · personajes · chat
 │   └── utilidades/            validacion.js · errores.js
 │
 ├── publico/                   Frontend — HTML/CSS/JS vanilla, sin compilar
@@ -164,11 +191,16 @@ Oficina-IA/
 │       ├── principal.js       ← archivo rey del cliente: estado, rutas y acciones
 │       ├── vista-plano.js     Plano SVG + lista de salas para móvil
 │       ├── vista-sala.js      Grilla de tarjetas de personaje
+│       ├── vista-chat.js      Conversación en streaming
+│       ├── markdown.js        Markdown a nodos del DOM, sin innerHTML
 │       ├── modal-personaje.js · modal-sala.js · modal.js
 │       ├── api.js · dom.js · color.js · iconos.js · piezas.js
 │       └── tema.js · notificaciones.js
 │
-├── pruebas/oficina.prueba.js  Prueba de extremo a extremo (npm run verificar)
+├── pruebas/
+│   ├── oficina.prueba.js      Extremo a extremo de la Fase 1
+│   ├── chat.prueba.js         Extremo a extremo del chat
+│   └── proveedor-falso.js     Servidor que imita el SSE de los proveedores
 └── datos/                     Base SQLite local (ignorada por git)
 ```
 
@@ -186,6 +218,11 @@ Todo lo que cuelga de `/api` exige sesión iniciada y responde JSON.
 | `POST` `PATCH` `DELETE` | `/api/salas` · `/api/salas/:id` | CRUD de salas (**solo admin**). Una sala con personajes dentro no se puede borrar. |
 | `GET` `POST` `PATCH` `DELETE` | `/api/personajes` · `/api/personajes/:id` | CRUD de personajes. |
 | `POST` | `/api/personajes/restaurar` | Deshacer un borrado: devuelve el personaje con su id original si sigue libre. |
+| `GET` | `/api/personajes/:id/conversacion` | El hilo abierto con ese personaje, más el histórico y si el chat está disponible. |
+| `POST` | `/api/personajes/:id/mensajes` | Manda un mensaje. Responde en **streaming (SSE)** con eventos `inicio`, `razonamiento`, `texto` y `fin`. |
+| `POST` | `/api/personajes/:id/conversacion/nueva` | Archiva el hilo actual y abre uno limpio. |
+| `GET` | `/api/personajes/:id/conversacion/:idHilo` | Relee un hilo archivado (solo los tuyos). |
+| `DELETE` | `/api/personajes/:id/mensajes/:idMensaje` | Borra un turno suelto del hilo abierto. |
 | `GET` | `/auth/estado` | Público. Qué proveedores de login hay disponibles. |
 | `GET` | `/auth/google` · `/auth/google/callback` | Flujo de OAuth. |
 | `POST` | `/auth/demo` | Login local (solo si `AUTH_PERMITIR_DEMO=true`). |
@@ -225,10 +262,41 @@ admiten `http://` y `https://`, nunca `javascript:`). Nada del usuario pasa por
 
 ---
 
-## 7. Qué falta (fases siguientes)
+## 7. El chat, por dentro
 
-- **Fase 2** — Chat real con la API de Anthropic, `persona_prompt` como system prompt,
-  historial persistente y selector de proveedor por personaje.
+**Un archivo por proveedor, una sola forma.** Cada adaptador de `servidor/ia/` expone
+un generador `conversar()` que va soltando `{tipo: 'texto' | 'razonamiento' | 'fin'}`.
+El resto del backend no sabe con quién habla. Anthropic va por su SDK oficial; OpenAI
+y Google, por HTTP directo contra su SSE, que son cuarenta líneas cada uno y ahorran
+dos dependencias.
+
+**Streaming de punta a punta.** La respuesta sale del proveedor en trozos, cruza el
+backend como SSE y se pinta en el navegador según llega. El Markdown se vuelve a
+componer una vez por fotograma, no una vez por trozo: los fragmentos llegan mucho más
+rápido de lo que la pantalla puede dibujar.
+
+**El pensamiento, resumido y plegado.** A Claude se le pide razonamiento en modo
+`summarized`. Sin eso, el chat se queda callado mientras el modelo piensa y parece
+colgado; con eso, aparece un bloque "Cómo lo pensó" que puedes desplegar. El
+razonamiento en crudo no lo expone ninguna API, y aquí tampoco se inventa.
+
+**El hilo no miente.** Si el proveedor falla, si el modelo declina responder o si
+pulsas "Detener", el turno se guarda igual con su motivo. Lo que sí llegó se conserva;
+lo que falló no se reenvía como contexto en el turno siguiente.
+
+**El Markdown no ejecuta nada.** `publico/js/markdown.js` compone la respuesta con
+nodos del DOM, nunca con `innerHTML`, y solo acepta enlaces `http`/`https`. Una
+respuesta con `<script>` dentro se ve como texto — hay una prueba de navegador que lo
+comprueba.
+
+**Cada quien con su hilo.** Las conversaciones se guardan por usuario y personaje, así
+que el día que compartas la oficina nadie lee el hilo de nadie. Los hilos anteriores
+quedan accesibles desde "Anteriores".
+
+---
+
+## 8. Qué falta (fases siguientes)
+
 - **Fase 3** — Skills en Markdown con frontmatter, asignables a cada personaje.
 - **Fase 4** — Conectores vía MCP (Drive, Gmail…), con permisos por personaje.
 - **Fase 5** — Roles admin/miembro, más proveedores de login y despliegue con

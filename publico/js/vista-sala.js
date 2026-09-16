@@ -10,20 +10,33 @@ import { avatar, chipEstado, chipProveedor, ETIQUETA_PROVEEDOR } from './piezas.
 /* ── Tarjeta de personaje ────────────────────────────────────────────────── */
 
 function tarjetaPersonaje(personaje, sala, acciones) {
-  const puedeChatear = personaje.proveedor_ia !== 'externo';
+  // Un personaje externo es una puerta a otra aplicación; el resto conversa aquí.
+  const esExterno = personaje.proveedor_ia === 'externo';
 
-  const accionPrincipal = personaje.enlace_externo
-    ? elemento('a.boton.boton--pequeno', {
-        href: personaje.enlace_externo,
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      }, [icono('enlace', { clase: 'boton__icono' }), 'Abrir'])
-    : elemento('button.boton.boton--pequeno', {
-        type: 'button',
-        disabled: true,
-        title: 'El chat llega en la Fase 2',
-        'aria-label': `Chatear con ${personaje.nombre} — disponible en la Fase 2`,
-      }, [icono('mensaje', { clase: 'boton__icono' }), 'Chatear']);
+  const abrirExterno =
+    personaje.enlace_externo &&
+    elemento('a.boton.boton--pequeno', {
+      href: personaje.enlace_externo,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    }, [icono('enlace', { clase: 'boton__icono' }), 'Abrir']);
+
+  let accionPrincipal;
+  if (esExterno) {
+    accionPrincipal = abrirExterno;
+  } else if (personaje.chat_disponible) {
+    accionPrincipal = elemento('a.boton.boton--pequeno.boton--acento', {
+      href: `#/chat/${personaje.id}`,
+      'aria-label': `Chatear con ${personaje.nombre}`,
+    }, [icono('mensaje', { clase: 'boton__icono' }), 'Chatear']);
+  } else {
+    accionPrincipal = elemento('button.boton.boton--pequeno', {
+      type: 'button',
+      disabled: true,
+      title: personaje.chat_motivo ?? 'Chat no disponible',
+      'aria-label': `Chatear con ${personaje.nombre} — ${personaje.chat_motivo ?? 'no disponible'}`,
+    }, [icono('mensaje', { clase: 'boton__icono' }), 'Chatear']);
+  }
 
   return elemento(`article.tarjeta.personaje.personaje--${personaje.estado}`, {
     variables: variablesSala(sala.color_acento),
@@ -46,6 +59,7 @@ function tarjetaPersonaje(personaje, sala, acciones) {
 
     elemento('div.personaje__acciones', {}, [
       accionPrincipal,
+      !esExterno && abrirExterno,
       elemento('button.boton-icono.a-la-derecha', {
         type: 'button',
         'aria-label': `Editar ${personaje.nombre}`,

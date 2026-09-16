@@ -13,9 +13,10 @@
     "bd:migrar": "node servidor/base-datos/migrar.js",
     "bd:sembrar": "node servidor/base-datos/sembrar.js",
     "bd:reiniciar": "node servidor/base-datos/reiniciar.js",
-    "verificar": "node --test pruebas/*.js"
+    "verificar": "node --test pruebas/*.prueba.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
     "better-sqlite3": "^11.10.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
