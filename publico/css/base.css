@@ -295,3 +295,80 @@ a { color: var(--acento); text-underline-offset: 3px; }
 }
 
 [hidden] { display: none !important; }
+
+/* ── Pantalla de carga ───────────────────────────────────────────────────── */
+
+.portada {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: var(--lienzo);
+  /* El fondo no es plano: un halo del acento detrás del sello da profundidad. */
+  background-image:
+    radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--acento) 12%, transparent), transparent 70%);
+  transition: opacity var(--medio) var(--curva), visibility var(--medio);
+}
+.portada[hidden] {
+  display: grid;          /* se desvanece en vez de desaparecer de golpe */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.portada__centro {
+  display: grid;
+  justify-items: center;
+  gap: var(--e3);
+  text-align: center;
+  padding: var(--e6);
+}
+
+.portada__sello {
+  width: 56px; height: 56px;
+  filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--tinta) 30%, transparent));
+  animation: portada-late 2.4s ease-in-out infinite;
+}
+@keyframes portada-late {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.portada__nombre {
+  font-size: var(--t-seccion);
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
+}
+.portada__pie {
+  font-family: var(--fuente-mono);
+  font-size: var(--t-micro);
+  color: var(--tinta-3);
+}
+
+.portada__barra {
+  width: 180px;
+  height: 3px;
+  margin-top: var(--e2);
+  border-radius: var(--radio-pleno);
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+.portada__barra span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--acento);
+  animation: portada-avanza 1.3s var(--curva) infinite;
+}
+@keyframes portada-avanza {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portada__sello, .portada__barra span { animation: none; }
+  .portada__barra span { width: 100%; }
+}

@@ -175,6 +175,40 @@ function lienzoPlano(estado) {
   });
   patron.append(elementoSvg('path', { class: 'plano__rejilla', d: 'M24 0H0V24', fill: 'none' }));
   defs.append(patron);
+
+  /*
+   * Profundidad (Fase 6). Los degradados usan `currentColor` y las variables de
+   * cada sala, así que el tema oscuro sale gratis: no hay ningún color escrito
+   * a mano aquí. El relieve es un bisel muy suave — lo justo para que una sala
+   * parezca una superficie y no un recorte.
+   */
+  const degradadoSala = elementoSvg('linearGradient', {
+    id: 'degradado-sala', x1: '0', y1: '0', x2: '0', y2: '1',
+  });
+  degradadoSala.append(
+    elementoSvg('stop', { offset: '0', 'stop-color': 'var(--sala-color)', 'stop-opacity': '0.16' }),
+    elementoSvg('stop', { offset: '1', 'stop-color': 'var(--sala-color)', 'stop-opacity': '0.05' }),
+  );
+
+  const degradadoSuelo = elementoSvg('linearGradient', {
+    id: 'degradado-suelo', x1: '0', y1: '0', x2: '0', y2: '1',
+  });
+  degradadoSuelo.append(
+    elementoSvg('stop', { offset: '0', 'stop-color': 'var(--superficie-2)' }),
+    elementoSvg('stop', { offset: '1', 'stop-color': 'var(--lienzo)' }),
+  );
+
+  const relieve = elementoSvg('filter', {
+    id: 'relieve-sala', x: '-20%', y: '-20%', width: '140%', height: '140%',
+  });
+  relieve.append(
+    elementoSvg('feDropShadow', {
+      dx: '0', dy: '1', stdDeviation: '0.5',
+      'flood-color': '#ffffff', 'flood-opacity': '0.5',
+    }),
+  );
+
+  defs.append(degradadoSala, degradadoSuelo, relieve);
   svg.append(defs);
 
   svg.append(

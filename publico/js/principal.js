@@ -265,6 +265,19 @@ async function recargar() {
   pintarVista();
 }
 
+/**
+ * La portada se va cuando la oficina ya está pintada, no cuando el JS arranca:
+ * si se retirase antes, se vería el esqueleto un instante y el efecto sería peor
+ * que no tener portada.
+ */
+function retirarPortada() {
+  const portada = buscar('#portada');
+  if (!portada || portada.hidden) return;
+  portada.hidden = true;
+  // Se saca del árbol al terminar la transición para que no capture el foco.
+  setTimeout(() => portada.remove(), 400);
+}
+
 async function iniciar() {
   pintarCargando();
   try {
@@ -282,11 +295,13 @@ async function iniciar() {
         }),
       ]),
     );
+    retirarPortada();
     return;
   }
 
   pintarCabecera();
   pintarVista();
+  retirarPortada();
 
   window.addEventListener('hashchange', pintarVista);
   // El color del texto de cada sala se recalcula contra el fondo del tema activo.

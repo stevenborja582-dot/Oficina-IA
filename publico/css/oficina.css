@@ -625,3 +625,193 @@
 @media (max-width: 719px) {
   .campo--codigo { min-height: 240px; }
 }
+
+/* ── Sala viva y misiones (Fase 6) ───────────────────────────────────────── */
+
+.sala-escena { display: flex; flex-direction: column; gap: var(--e5); }
+
+.conmutador-vista {
+  display: inline-flex;
+  gap: var(--e1);
+  padding: var(--e1);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-pleno);
+  background: var(--superficie-2);
+  align-self: flex-start;
+  margin-bottom: var(--e4);
+}
+.conmutador-vista .filtro { border: 0; background: transparent; }
+.conmutador-vista .filtro[aria-pressed='true'] { background: var(--superficie); color: var(--tinta); box-shadow: var(--sombra-1); }
+.conmutador-vista svg { width: 15px; height: 15px; }
+
+/* La orden: es la acción principal de la pantalla, así que pesa más que nada. */
+.mision {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e4);
+  padding: var(--e5);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-4);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--acento) 5%, var(--superficie)), var(--superficie) 70%);
+  box-shadow: var(--sombra-2);
+}
+
+.mision__cabecera { display: flex; align-items: flex-start; gap: var(--e3); }
+.mision__icono {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border-radius: var(--radio-2);
+  background: var(--acento-suave);
+  color: var(--acento-fuerte);
+}
+.mision__icono svg { width: 20px; height: 20px; }
+.mision__titulo { font-size: var(--t-seccion); font-weight: 620; letter-spacing: -0.02em; }
+
+.mision__barra { display: flex; gap: var(--e3); align-items: flex-end; }
+.mision__barra .compositor__caja { flex: 1; }
+.mision__acciones { display: flex; gap: var(--e2); flex: none; }
+
+.mision__cuerpo { display: flex; flex-direction: column; gap: var(--e4); }
+
+.mision__estado {
+  display: flex; align-items: center; gap: var(--e3);
+  padding: var(--e3) var(--e4);
+  border-radius: var(--radio-3);
+  background: var(--superficie-2);
+}
+.mision__estado > div { flex: 1; min-width: 0; }
+
+.mision__pulso {
+  width: 10px; height: 10px; flex: none;
+  border-radius: 50%;
+  background: var(--tinta-3);
+}
+.mision__pulso--vivo { background: var(--acento); animation: pulso-mision 1.4s ease-in-out infinite; }
+.mision__pulso[data-estado='lista'] { background: var(--exito); }
+.mision__pulso[data-estado='error'] { background: var(--peligro); }
+@keyframes pulso-mision {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acento) 55%, transparent); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.mision__pasos { display: flex; flex-direction: column; gap: var(--e3); list-style: none; padding: 0; margin: 0; }
+
+.paso-mision {
+  display: flex; flex-direction: column; gap: var(--e2);
+  padding: var(--e4);
+  border: 1px solid var(--linea);
+  border-left: 3px solid var(--linea-fuerte);
+  border-radius: var(--radio-2);
+  background: var(--superficie);
+  transition: border-color var(--rapido) var(--curva);
+}
+.paso-mision--trabajando { border-left-color: var(--acento); }
+.paso-mision--lista { border-left-color: var(--exito); }
+.paso-mision--error { border-left-color: var(--peligro); }
+
+.paso-mision__quien { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2); }
+.paso-mision__quien strong { font-size: var(--t-ui); font-weight: 580; }
+.paso-mision__marca {
+  margin-left: auto;
+  font-size: var(--t-nano);
+  font-family: var(--fuente-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+.paso-mision--trabajando .paso-mision__marca { color: var(--acento-fuerte); }
+.paso-mision--lista .paso-mision__marca { color: var(--exito); }
+.paso-mision--error .paso-mision__marca { color: var(--peligro); }
+
+.paso-mision__encargo { font-size: var(--t-micro); color: var(--tinta-2); }
+.paso-mision__detalle summary {
+  font-size: var(--t-micro);
+  color: var(--tinta-2);
+  cursor: pointer;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.paso-mision__detalle[open] summary { margin-bottom: var(--e2); }
+
+.mision__resultado {
+  padding: var(--e5);
+  border-radius: var(--radio-3);
+  background: var(--superficie-2);
+  border: 1px solid var(--linea);
+}
+.mision__titulo-resultado {
+  font-size: var(--t-ui);
+  font-weight: 620;
+  margin-bottom: var(--e3);
+}
+
+@media (max-width: 719px) {
+  .mision { padding: var(--e4); }
+  .mision__barra { flex-direction: column; align-items: stretch; }
+  .mision__acciones .boton { flex: 1; }
+  .paso-mision__detalle summary { min-height: 44px; }
+}
+
+/* ── Profundidad (Fase 6) ────────────────────────────────────────────────── */
+/*
+   El plano se veía plano en el sentido literal: rectángulos de un solo tono
+   sobre un fondo de un solo tono. Aquí no se cambia la paleta —sigue siendo la
+   misma de la v1— sino cómo cae la luz sobre ella: un degradado por sala, una
+   sombra propia y un suelo que se hunde en los bordes.
+*/
+
+.sala-plano__fondo {
+  fill: url(#degradado-sala);
+  filter: url(#relieve-sala);
+}
+
+/* La sombra ahora está siempre, no solo al pasar por encima: es lo que separa
+   la sala del suelo. Al enfocarla crece, que es lo que dice "esto se levanta". */
+.sala-plano__sombra { opacity: 0.08; }
+.sala-plano:hover .sala-plano__sombra,
+.sala-plano:focus-visible .sala-plano__sombra { opacity: 0.18; }
+
+.plano__suelo { fill: url(#degradado-suelo); }
+
+/* Viñeteado del plano: hunde las esquinas para que el centro respire. */
+.plano::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 50% 30%, transparent 55%,
+              color-mix(in srgb, var(--tinta) 9%, transparent) 100%);
+}
+
+/* Las tarjetas ganan un borde de luz arriba: el truco de Stripe y Linear para
+   que una superficie parezca iluminada desde arriba en vez de recortada. */
+.tarjeta {
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #ffffff 40%, transparent), transparent 40%),
+    var(--superficie);
+}
+.tarjeta::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent,
+              color-mix(in srgb, #ffffff 70%, transparent) 20% 80%, transparent);
+  pointer-events: none;
+}
+/* En oscuro el brillo superior es mucho más tenue: a plena potencia se vería
+   como una raya blanca en vez de como luz. */
+:root:not([data-tema='claro']) .tarjeta::before {
+  background: linear-gradient(90deg, transparent,
+              color-mix(in srgb, #ffffff 12%, transparent) 20% 80%, transparent);
+}
+
+/* Al pasar por encima, la tarjeta se levanta de verdad. */
+.tarjeta:hover { box-shadow: var(--sombra-2); }
+.personaje:hover { transform: translateY(-2px); }
+
+/* La cabecera flota sobre el contenido, no se apoya en él. */
+.cabecera { box-shadow: 0 1px 0 color-mix(in srgb, var(--tinta) 6%, transparent); }

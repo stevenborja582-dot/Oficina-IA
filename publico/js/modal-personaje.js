@@ -10,9 +10,18 @@ import { ETIQUETA_ESTADO, ETIQUETA_PROVEEDOR } from './piezas.js';
 import { bloqueConectores } from './conectores-de-personaje.js';
 import { bloqueSkills } from './skills-de-personaje.js';
 
+const ETIQUETA_RANGO = {
+  secretario: 'Secretario · recibe y reparte',
+  manager: 'Manager · decide el alcance',
+  especialista: 'Especialista · ejecuta lo suyo',
+};
+
 const VACIO = {
   nombre: '',
   rol_titulo: '',
+  especialidad: '',
+  app: '',
+  rango: 'especialista',
   avatar_url: '',
   persona_prompt: '',
   proveedor_ia: 'anthropic',
@@ -37,6 +46,31 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, permi
 
   const campoNombre = entrada({ name: 'nombre', value: datos.nombre, maxLength: 60, autocomplete: 'off' });
   const campoRol = entrada({ name: 'rol_titulo', value: datos.rol_titulo, maxLength: 80, autocomplete: 'off' });
+
+  const campoEspecialidad = entrada({
+    name: 'especialidad',
+    value: datos.especialidad,
+    maxLength: catalogos.limites?.especialidad ?? 80,
+    autocomplete: 'off',
+    placeholder: 'Escribir y revisar código, arquitectura, depuración',
+  });
+
+  // La lista de apps es una sugerencia, no una jaula: el campo sigue siendo libre.
+  const listaApps = elemento('datalist#apps-conocidas', {}, (catalogos.apps ?? []).map((app) =>
+    elemento('option', { value: app })));
+  const campoApp = entrada({
+    name: 'app',
+    value: datos.app,
+    maxLength: catalogos.limites?.app ?? 60,
+    autocomplete: 'off',
+    list: 'apps-conocidas',
+    placeholder: 'Claude Code, Figma, Excel…',
+  });
+
+  const campoRango = seleccion(
+    (catalogos.rangos ?? ['secretario', 'manager', 'especialista']).map((clave) => [clave, ETIQUETA_RANGO[clave] ?? clave]),
+    { name: 'rango', valor: datos.rango },
+  );
   const campoSala = seleccion(salas.map((s) => [String(s.id), s.nombre]), {
     name: 'sala_id',
     valor: String(salaActual?.id ?? salas[0]?.id ?? ''),
@@ -128,6 +162,16 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, permi
   formulario.append(
     campo({ etiqueta: 'Nombre', control: campoNombre, obligatorio: true }),
     campo({ etiqueta: 'Rol', pista: 'Cómo lo llamas dentro del equipo.', control: campoRol }),
+    campo({
+      etiqueta: 'Especialidad',
+      pista: 'En qué es bueno. Es lo que mira quien reparte una misión para decidir si le toca.',
+      control: campoEspecialidad,
+    }),
+    elemento('div.rejilla-campos.rejilla-campos--dos', {}, [
+      campo({ etiqueta: 'App que usa', pista: 'La herramienta con la que trabaja.', control: campoApp }),
+      campo({ etiqueta: 'Rango', pista: 'Quién reparte y quién ejecuta.', control: campoRango }),
+    ]),
+    listaApps,
     elemento('div.rejilla-campos.rejilla-campos--dos', {}, [
       campo({ etiqueta: 'Sala', control: campoSala }),
       campo({ etiqueta: 'Estado', control: campoEstado }),

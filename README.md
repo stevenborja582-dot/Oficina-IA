@@ -6,8 +6,11 @@ una sala, das de alta a tus personajes **y hablas con ellos de verdad**: cada un
 persona, su modelo, su historial, los procedimientos que le enseñes y las
 herramientas externas que le prestes.
 
-**Las cinco fases están implementadas.** El detalle de cada una está en
-[`CLAUDE.md`](./CLAUDE.md).
+Y cuando le das una orden, **la oficina se pone a trabajar**: alguien la reparte
+según la especialidad de cada uno, cada especialista hace su parte, y al final
+te devuelven un resultado. Lo ves pasar en la sala, con la gente moviéndose.
+
+**Seis fases implementadas.** El detalle de cada una está en [`CLAUDE.md`](./CLAUDE.md).
 
 ```
 ┌─ Plano (SVG clicable) ─────────────────┐   ┌─ Sala ──────────┐   ┌─ Chat ─────────────┐
@@ -229,6 +232,7 @@ Oficina-IA/
 │   ├── ia/                    Un archivo por proveedor, todos con la misma forma
 │   │   ├── proveedores.js     Registro: qué proveedor mueve a cada personaje
 │   │   ├── skills-en-contexto.js  Índice en el system prompt + herramienta abrir_skill
+│   │   ├── misiones.js        Reparto, trabajo en paralelo y síntesis
 │   │   ├── anthropic.js       SDK oficial, streaming, pensamiento resumido
 │   │   ├── openai.js          HTTP directo contra su SSE
 │   │   ├── google.js          Ídem para Gemini
@@ -245,7 +249,8 @@ Oficina-IA/
 │   ├── css/
 │   │   ├── base.css           ← tokens del sistema de diseño (colores, tipografía, escala)
 │   │   ├── componentes.css    Botones, campos, chips, avatar, modal, avisos
-│   │   ├── oficina.css        Plano, sala, conectores y equipo
+│   │   ├── oficina.css        Plano, sala, conectores, equipo y misiones
+│   │   ├── escena.css         Suelo, muebles y personajes de la sala viva
 │   │   ├── chat.css           Conversación y pasos de herramienta
 │   │   └── entrar.css         Pantalla de acceso
 │   └── js/
@@ -253,6 +258,8 @@ Oficina-IA/
 │       ├── vista-plano.js     Plano SVG + lista de salas para móvil
 │       ├── vista-sala.js      Grilla de tarjetas de personaje
 │       ├── vista-chat.js      Conversación en streaming
+│       ├── escena-sala.js     La sala viva: muebles, figuras y su movimiento
+│       ├── mision.js          Barra de órdenes, pasos en vivo y resultado
 │       ├── vista-skills.js    Escribir, buscar, apagar y borrar skills
 │       ├── skills-de-personaje.js     Asignación por personaje
 │       ├── vista-conectores.js Alta, prueba y borrado de servidores MCP
@@ -268,12 +275,13 @@ Oficina-IA/
 │   └── fly.toml               Configuración de Fly.io
 │
 ├── demo/oficina.html          La oficina en un archivo, sin servidor (ver §0)
-├── pruebas/                   63 pruebas, `npm run verificar`
+├── pruebas/                   73 pruebas, `npm run verificar`
 │   ├── oficina.prueba.js      Extremo a extremo de la Fase 1
 │   ├── chat.prueba.js         Extremo a extremo del chat
 │   ├── skills.prueba.js       Formato, asignación y qué llega de verdad al modelo
 │   ├── conectores.prueba.js   MCP de verdad por stdio contra un servidor de prueba
 │   ├── equipo.prueba.js       Roles, invitaciones y suspensión
+│   ├── misiones.prueba.js     Reparto, paralelo, fallo de un paso y propiedad
 │   ├── proveedor-falso.js     Servidor que imita el SSE de los proveedores
 │   └── servidor-mcp-falso.js  Servidor MCP real, para no simular el protocolo
 └── datos/                     Base SQLite local (ignorada por git)
@@ -298,6 +306,10 @@ Todo lo que cuelga de `/api` exige sesión iniciada y responde JSON.
 | `POST` | `/api/personajes/:id/conversacion/nueva` | Archiva el hilo actual y abre uno limpio. |
 | `GET` | `/api/personajes/:id/conversacion/:idHilo` | Relee un hilo archivado (solo los tuyos). |
 | `DELETE` | `/api/personajes/:id/mensajes/:idMensaje` | Borra un turno suelto del hilo abierto. |
+| `POST` | `/api/misiones` | Lanza una misión. Responde en **streaming (SSE)** con `inicio`, `reparto`, `paso`, `estado` y `fin`. |
+| `GET` | `/api/misiones` · `/api/misiones/:id` | Tus misiones y el detalle de una, con sus pasos. Solo las tuyas. |
+| `GET` | `/api/misiones/equipo` | Quién puede trabajar, quién coordinaría, y quién queda fuera y por qué. |
+| `POST` `DELETE` | `/api/misiones/:id/detener` · `/api/misiones/:id` | Cortar una en vuelo, o borrarla. |
 | `GET` | `/api/skills` · `/api/skills/:id` | Skills escritas. El detalle trae el archivo entero con su frontmatter. |
 | `POST` `PATCH` `DELETE` | `/api/skills` · `/api/skills/:id` | CRUD de skills (**solo admin**). Leerlas puede cualquiera. |
 | `POST` | `/api/skills/restaurar` | Deshacer un borrado, con su id original si sigue libre. |
@@ -381,7 +393,46 @@ quedan accesibles desde "Anteriores".
 
 ---
 
-## 8. Skills, conectores y equipo, por dentro
+## 8. La oficina viva y las misiones
+
+### Dar una orden
+
+Escribes un encargo en la barra de una sala —o de toda la oficina— y pasan tres
+cosas, las tres con llamadas reales al modelo:
+
+1. **Reparto.** El coordinador (el secretario si lo hay, si no el manager) ve la
+   plantilla con el nombre, la especialidad, la app y la sala de cada uno, y decide
+   quién hace qué. No trabaja: reparte.
+2. **Trabajo.** Cada especialista ejecuta su parte con su propio proveedor, su
+   persona y sus skills. **En paralelo**: son independientes, y en serie una misión
+   de cinco pasos tardaría cinco veces más sin ganar nada.
+3. **Síntesis.** El coordinador junta lo que trajo cada uno y escribe el resultado.
+   Si un paso falló, lo dice en vez de disimularlo.
+
+Un paso que se cae **no tumba la misión**. Y **cerrar la pestaña tampoco la aborta**:
+el trabajo ya está pagado y en marcha, así que sigue y se recoge al volver. Para
+cortarla de verdad está el botón de detener.
+
+### La sala, por dentro
+
+La sala es DOM y transformaciones CSS, no canvas. Tres razones concretas: cada
+personaje es un `<button>` que se alcanza con el tabulador, los nombres son texto
+que un lector de pantalla sabe leer, y los colores salen de las mismas variables
+que el resto de la app, así que el tema oscuro sale gratis.
+
+Cada uno tiene su escritorio. Cuando no hay nada que hacer pasean, y si se cruzan
+a veces se dicen algo. Cuando hay una misión, los implicados se juntan en la mesa
+mientras se reparte, luego cada uno vuelve a su sitio con la insignia de su app, y
+al terminar se sueltan. **Lo que se anima es el estado real de cada paso**, no una
+coreografía guionizada: si un personaje está trabajando en pantalla es porque hay
+una llamada suya en vuelo.
+
+Con `prefers-reduced-motion` no hay bucle de animación: cada uno se coloca donde le
+toca y se queda ahí. La información es la misma; el movimiento no.
+
+---
+
+## 9. Skills, conectores y equipo, por dentro
 
 ### Skills: índice siempre, instrucciones a petición
 
@@ -456,7 +507,7 @@ suyas, no del personaje.
 
 ---
 
-## 9. Accesibilidad y rendimiento
+## 10. Accesibilidad y rendimiento
 
 Revisadas las seis pantallas (entrar, plano, sala, chat, conectores, equipo) en los
 dos temas y a 1280 y 390 px, con una auditoría que mide sobre el DOM real: contraste
@@ -494,7 +545,7 @@ de vista no pide un solo asset más.
 
 ---
 
-## 10. Despliegue
+## 11. Despliegue
 
 La oficina guarda su estado en **un archivo SQLite**, así que lo único que de verdad
 necesita del hosting es un **disco que sobreviva a los despliegues**. Hay dos
@@ -540,11 +591,16 @@ día, la migración es un trabajo con nombre y alcance claro, no un atajo.
 
 ---
 
-## 11. Hasta aquí llega la hoja de ruta
+## 12. Hasta aquí llega la hoja de ruta
 
-Las cinco fases están construidas y funcionando de punta a punta. Lo que vendría
-después ya no está planificado; estas son las tres ideas que el código deja más a
-mano, por si algún día hacen falta:
+Seis fases construidas y funcionando de punta a punta. Lo que vendría después ya no
+está planificado; estas son las ideas que el código deja más a mano, por si algún
+día hacen falta:
+
+- **Misiones encadenadas.** Hoy los pasos van en paralelo y son independientes. Un
+  paso que dependa del resultado de otro necesitaría un orden explícito en el plan.
+- **Guardar la disposición de cada sala.** Los muebles se colocan por fórmula; que
+  pudieras arrastrarlos y que se quedara guardado es una tabla más.
 
 - **Skills con archivos adjuntos.** Hoy una skill es un archivo. Un `SKILL.md` de
   verdad puede traer plantillas o scripts al lado; el hueco natural es una tabla

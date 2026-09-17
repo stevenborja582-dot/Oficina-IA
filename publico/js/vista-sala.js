@@ -6,6 +6,8 @@ import { elemento, normalizar, reemplazar } from './dom.js';
 import { icono } from './iconos.js';
 import { variablesSala } from './color.js';
 import { avatar, chipEstado, chipProveedor, ETIQUETA_PROVEEDOR } from './piezas.js';
+import { escenaSala } from './escena-sala.js';
+import { panelMision } from './mision.js';
 
 /* ── Tarjeta de personaje ────────────────────────────────────────────────── */
 
@@ -89,6 +91,67 @@ export function vistaSala(estado, sala, acciones) {
   const conteo = elemento('p.barra-herramientas__conteo', { role: 'status' });
 
   const seccion = elemento('section', { variables });
+
+  /*
+   * Dos formas de mirar la misma sala: la escena, donde se ve quién está y qué
+   * hace, y las fichas, que es donde se edita. La escena manda por defecto porque
+   * es la que responde a "¿cómo va lo que pedí?"; las fichas siguen a un clic.
+   */
+  const activos = personajesDeSala.filter((personaje) => personaje.estado !== 'borrador');
+  const escena = activos.length > 0
+    ? escenaSala(sala, activos, { alPulsarPersonaje: (personaje) => acciones.editarPersonaje(personaje) })
+    : null;
+
+  const mision = panelMision({
+    sala,
+    alCambiar: (estadoMision) => {
+      if (!escena) return;
+      escena.nodo.classList.toggle(
+        'escena--en-mision',
+        Boolean(estadoMision) && !['lista', 'error', 'detenida'].includes(estadoMision.estado),
+      );
+      escena.aplicarMision(estadoMision);
+    },
+  });
+
+  const zonaEscena = elemento('div.sala-escena', {}, [
+    escena
+      ? escena.nodo
+      : elemento('div.vacio', {}, [
+        elemento('span.vacio__icono', { 'aria-hidden': 'true' }, [icono('oficina')]),
+        elemento('h2', { texto: 'La sala está vacía' }),
+        elemento('p', { texto: 'Añade un personaje y lo verás aparecer en su escritorio.' }),
+      ]),
+    mision.nodo,
+  ]);
+
+  let vista = 'escena';
+  const conmutador = elemento('div.conmutador-vista', { role: 'group', 'aria-label': 'Cómo ver la sala' }, [
+    ...[['escena', 'Sala', 'oficina'], ['fichas', 'Fichas', 'cubo']].map(([clave, texto, dibujo]) =>
+      elemento('button.filtro', {
+        type: 'button',
+        'aria-pressed': vista === clave ? 'true' : 'false',
+        datos: { vista: clave },
+        alClick: (evento) => cambiarVista(clave, evento.currentTarget.closest('.conmutador-vista')),
+      }, [icono(dibujo), texto])),
+  ]);
+
+  function cambiarVista(clave, grupo) {
+    vista = clave;
+    [...grupo.children].forEach((boton) => {
+      boton.setAttribute('aria-pressed', boton.dataset.vista === clave ? 'true' : 'false');
+    });
+    zonaEscena.hidden = clave !== 'escena';
+    barra.hidden = clave !== 'fichas';
+    rejilla.hidden = clave !== 'fichas';
+  }
+
+  // Al salir de la vista se para el bucle de animación: nadie sigue caminando
+  // en una sala que ya no se ve.
+  seccion.addEventListener('oficina:salir', () => {
+    escena?.destruir();
+    mision.detener();
+  });
 
   const encabezado = elemento('header.encabezado', {}, [
     elemento('div.encabezado__texto', {}, [
@@ -225,6 +288,8 @@ export function vistaSala(estado, sala, acciones) {
 
   seccion.append(
     encabezado,
+    conmutador,
+    zonaEscena,
     barra,
     // El escalón entre el h1 de la sala y el h3 de cada tarjeta. No se ve: el
     // nombre de la sala ya está arriba, repetirlo sería ruido para quien mira.
@@ -232,5 +297,6 @@ export function vistaSala(estado, sala, acciones) {
     rejilla,
   );
   pintar();
+  cambiarVista('escena', conmutador);
   return seccion;
 }

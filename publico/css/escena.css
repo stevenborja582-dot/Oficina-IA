@@ -1,0 +1,313 @@
+/* =========================================================================
+   La sala viva (Fase 6): suelo, muebles y personajes que caminan.
+
+   Todo se posiciona en un lienzo lógico de 1000 × 620 escalado con
+   `container-type`. Las coordenadas de cada pieza llegan como --x / --y en
+   unidades de ese lienzo, así que el JS nunca toca píxeles reales.
+   ========================================================================= */
+
+.escena {
+  position: relative;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-4);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.escena__lienzo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ancho) / var(--alto);
+  /* Todo lo de dentro se mide en unidades del lienzo. */
+  font-size: calc(100cqw / var(--ancho));
+}
+
+/* Cada hijo posicionado traduce sus --x/--y de unidades lógicas a ems del lienzo. */
+.escena__capa { position: absolute; inset: 0; }
+
+/* ── Suelo y pared ───────────────────────────────────────────────────────── */
+
+.escena__pared {
+  position: absolute;
+  inset: 0 0 66% 0;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--sala-color) 10%, var(--superficie)) 0%,
+      color-mix(in srgb, var(--sala-color) 4%, var(--superficie)) 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--sala-color) 22%, var(--linea));
+}
+
+.escena__suelo {
+  position: absolute;
+  inset: 34% 0 0 0;
+  background:
+    /* Rejilla en perspectiva: las líneas se separan al acercarse. */
+    repeating-linear-gradient(90deg,
+      transparent 0 calc(60em - 1px),
+      color-mix(in srgb, var(--tinta) 5%, transparent) calc(60em - 1px) 60em),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--sala-color) 7%, var(--lienzo)) 0%,
+      var(--lienzo) 70%);
+}
+/* Viñeteado: hunde las esquinas y evita que el suelo se vea como un rectángulo plano. */
+.escena__suelo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 20%, transparent 40%,
+              color-mix(in srgb, var(--tinta) 10%, transparent) 100%);
+}
+
+/* ── Muebles ─────────────────────────────────────────────────────────────── */
+
+.mueble {
+  position: absolute;
+  left: calc(var(--x) * 1em / 1px);
+  top: calc(var(--y) * 1em / 1px);
+  transform: translate(-50%, -50%);
+}
+
+.mueble--pizarra {
+  width: 320em; height: 92em;
+  display: grid;
+  align-content: center;
+  gap: 9em;
+  padding: 14em 20em;
+  border-radius: 6em;
+  background: color-mix(in srgb, var(--superficie) 92%, var(--sala-color));
+  border: 2em solid color-mix(in srgb, var(--sala-color) 30%, var(--linea));
+  box-shadow: 0 8em 18em -8em color-mix(in srgb, var(--tinta) 45%, transparent);
+}
+.mueble__rotulo {
+  font-size: 26em;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--rotulo-tinta, var(--sala-tinta));
+  line-height: 1.1;
+}
+.mueble__trazo {
+  height: 6em;
+  width: 70%;
+  border-radius: 3em;
+  background: color-mix(in srgb, var(--tinta) 16%, transparent);
+}
+.mueble__trazo--corto { width: 45%; }
+
+.mueble--mesa {
+  width: 260em; height: 108em;
+  border-radius: 54em / 22em;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tinta) 12%, var(--superficie)),
+    color-mix(in srgb, var(--tinta) 20%, var(--superficie)));
+  border: 2em solid color-mix(in srgb, var(--tinta) 22%, transparent);
+  box-shadow: 0 14em 26em -10em color-mix(in srgb, var(--tinta) 50%, transparent);
+}
+
+.mueble--escritorio {
+  width: 120em; height: 62em;
+}
+.mueble--escritorio .mueble__tablero {
+  position: absolute; inset: auto 0 0 0;
+  height: 30em;
+  border-radius: 5em;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tinta) 10%, var(--superficie)),
+    color-mix(in srgb, var(--tinta) 18%, var(--superficie)));
+  box-shadow: 0 10em 18em -8em color-mix(in srgb, var(--tinta) 55%, transparent);
+}
+.mueble--escritorio .mueble__pantalla {
+  position: absolute; left: 50%; top: 0;
+  transform: translateX(-50%);
+  width: 58em; height: 38em;
+  border-radius: 4em;
+  background: color-mix(in srgb, var(--tinta) 72%, var(--superficie));
+  border: 2em solid color-mix(in srgb, var(--tinta) 30%, transparent);
+}
+
+.mueble--planta {
+  width: 46em; height: 70em;
+  border-radius: 50% 50% 18em 18em;
+  background:
+    radial-gradient(circle at 50% 32%, color-mix(in srgb, #3F8F5B 85%, transparent) 0 46%, transparent 47%),
+    linear-gradient(180deg, transparent 58%, color-mix(in srgb, var(--acento) 55%, var(--tinta)) 58%);
+}
+.mueble--archivador {
+  width: 64em; height: 86em;
+  border-radius: 5em;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tinta) 14%, var(--superficie)),
+    color-mix(in srgb, var(--tinta) 24%, var(--superficie)));
+  box-shadow: inset 0 24em 0 -22em color-mix(in srgb, var(--tinta) 30%, transparent),
+              inset 0 52em 0 -50em color-mix(in srgb, var(--tinta) 30%, transparent);
+}
+.mueble--fuente {
+  width: 40em; height: 76em;
+  border-radius: 8em 8em 4em 4em;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, #4AA3C7 55%, var(--superficie)) 0 42%,
+    color-mix(in srgb, var(--tinta) 16%, var(--superficie)) 42%);
+}
+
+/* ── Personajes ──────────────────────────────────────────────────────────── */
+
+.figura {
+  position: absolute;
+  left: calc(var(--x) * 1em / 1px);
+  top: calc(var(--y) * 1em / 1px);
+  z-index: calc(var(--capa, 0));
+  transform: translate(-50%, -100%);
+  display: grid;
+  justify-items: center;
+  gap: 2em;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* El movimiento lo lleva el JS con --x/--y; la transición solo suaviza el salto
+     cuando alguien se teletransporta (movimiento reducido o recolocación). */
+  transition: left 120ms linear, top 120ms linear;
+}
+.figura:focus-visible { outline: none; }
+.figura:focus-visible .figura__cabeza {
+  outline: 3em solid var(--acento);
+  outline-offset: 3em;
+}
+
+.figura__cuerpo {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  transform: scaleX(var(--mirando, 1));
+}
+
+.figura__cabeza {
+  width: 34em; height: 34em;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  /* El degradado no puede aclarar la cabeza por encima de lo que aguanta el
+     texto blanco: la luz va arriba y muy poco. */
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--figura-cabeza) 92%, #ffffff),
+    var(--figura-cabeza));
+  border: 2em solid color-mix(in srgb, var(--tinta) 22%, transparent);
+  box-shadow: inset 0 -6em 10em -6em color-mix(in srgb, var(--tinta) 60%, transparent),
+              0 4em 8em -4em color-mix(in srgb, var(--tinta) 60%, transparent);
+}
+.figura__cara {
+  font-size: 14em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow: 0 1px 2px color-mix(in srgb, #000000 45%, transparent);
+  transform: scaleX(var(--mirando, 1));
+}
+
+.figura__torso {
+  width: 30em; height: 32em;
+  margin-top: -3em;
+  border-radius: 10em 10em 6em 6em;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--figura-color) 62%, var(--superficie)),
+    color-mix(in srgb, var(--figura-color) 40%, var(--superficie)));
+  border: 2em solid color-mix(in srgb, var(--tinta) 16%, transparent);
+}
+
+.figura__pierna {
+  position: absolute;
+  bottom: -12em;
+  width: 8em; height: 14em;
+  border-radius: 3em;
+  background: color-mix(in srgb, var(--tinta) 55%, var(--figura-color));
+  transform-origin: top center;
+}
+.figura__pierna--i { left: calc(50% - 10em); }
+.figura__pierna--d { left: calc(50% + 2em); }
+
+.figura--andando .figura__pierna--i { animation: paso-i 460ms linear infinite; }
+.figura--andando .figura__pierna--d { animation: paso-d 460ms linear infinite; }
+.figura--andando .figura__cuerpo { animation: bamboleo 460ms ease-in-out infinite; }
+
+@keyframes paso-i { 0%, 100% { transform: rotate(18deg); } 50% { transform: rotate(-18deg); } }
+@keyframes paso-d { 0%, 100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
+@keyframes bamboleo { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2em; } }
+
+.figura__sombra {
+  width: 30em; height: 9em;
+  margin-top: 12em;
+  border-radius: 50%;
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--tinta) 38%, transparent), transparent);
+}
+
+.figura__nombre {
+  padding: 2em 7em;
+  border-radius: 20em;
+  background: color-mix(in srgb, var(--superficie) 86%, transparent);
+  border: 1.5em solid var(--linea);
+  font-size: 13em;
+  font-weight: 560;
+  color: var(--tinta-2);
+  white-space: nowrap;
+  backdrop-filter: blur(2px);
+}
+
+.figura__app {
+  position: absolute;
+  top: -14em;
+  padding: 2em 8em;
+  border-radius: 20em;
+  background: var(--acento);
+  color: #ffffff;
+  font-family: var(--fuente-mono);
+  font-size: 11em;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4em 10em -4em color-mix(in srgb, var(--tinta) 70%, transparent);
+}
+
+.figura__globo {
+  position: absolute;
+  bottom: calc(100% + 6em);
+  max-width: 200em;
+  padding: 6em 11em;
+  border-radius: 14em 14em 14em 4em;
+  background: var(--superficie);
+  border: 2em solid var(--linea-fuerte);
+  box-shadow: 0 8em 16em -6em color-mix(in srgb, var(--tinta) 60%, transparent);
+  font-size: 13em;
+  font-weight: 500;
+  color: var(--tinta);
+  white-space: nowrap;
+  animation: globo-entra 180ms var(--curva);
+}
+@keyframes globo-entra {
+  from { opacity: 0; transform: translateY(4em) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Estados de misión ───────────────────────────────────────────────────── */
+
+/* Quien no está en la misión se apaga: así se ve de un vistazo quién trabaja. */
+.escena--en-mision .figura { opacity: 0.42; }
+.escena--en-mision .figura--implicada { opacity: 1; }
+
+.figura--trabajando .figura__cabeza {
+  box-shadow: 0 0 0 4em color-mix(in srgb, var(--acento) 45%, transparent),
+              0 4em 8em -4em color-mix(in srgb, var(--tinta) 60%, transparent);
+  animation: teclea 900ms ease-in-out infinite;
+}
+@keyframes teclea { 0%, 100% { translate: 0 0; } 50% { translate: 0 -2em; } }
+
+.figura--lista .figura__cabeza { box-shadow: 0 0 0 4em color-mix(in srgb, var(--exito) 55%, transparent); }
+.figura--fallida .figura__cabeza { box-shadow: 0 0 0 4em color-mix(in srgb, var(--peligro) 55%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .figura { transition: none; }
+  .figura--andando .figura__pierna--i,
+  .figura--andando .figura__pierna--d,
+  .figura--andando .figura__cuerpo,
+  .figura--trabajando .figura__cabeza,
+  .figura__globo { animation: none; }
+}

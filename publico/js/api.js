@@ -78,6 +78,15 @@ export const api = {
   asignarSkills: (personajeId, ids) =>
     pedir(`/api/personajes/${personajeId}/skills`, { metodo: 'PUT', cuerpo: { skills: ids } }),
 
+  // — Misiones (Fase 6) ——————————————————————————————————————————
+  // Lanzar una misión va por SSE y se hace con `fetch` a pelo en mision.js;
+  // aquí queda lo que sí es JSON normal.
+  misiones: () => pedir('/api/misiones'),
+  mision: (id) => pedir(`/api/misiones/${id}`),
+  equipoDeMision: (salaId = null) => pedir(`/api/misiones/equipo${salaId ? `?sala=${salaId}` : ''}`),
+  detenerMision: (id) => pedir(`/api/misiones/${id}/detener`, { metodo: 'POST' }),
+  eliminarMision: (id) => pedir(`/api/misiones/${id}`, { metodo: 'DELETE' }),
+
   // — Equipo (Fase 5) ————————————————————————————————————————————
   equipo: () => pedir('/api/equipo'),
   cambiarUsuario: (id, cambios) => pedir(`/api/equipo/${id}`, { metodo: 'PATCH', cuerpo: cambios }),

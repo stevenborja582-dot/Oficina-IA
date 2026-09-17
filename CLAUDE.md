@@ -14,10 +14,10 @@
 | **Fase 3** | Skills (Markdown + frontmatter, asignación por personaje, revelación progresiva en contexto) | ✅ **Implementada** |
 | **Fase 4** | Conectores MCP (cliente en el backend, asignación y lista blanca por personaje) | ✅ **Implementada** |
 | **Fase 5** | Multiusuario y despliegue (roles, invitaciones, login con GitHub, configuración de hosting) | ✅ **Implementada** |
+| **Fase 6** | La oficina viva (salas animadas, especialidad y app por personaje, misiones en equipo) | ✅ **Implementada** |
 
-> **La hoja de ruta está completa.** La Fase 3 se construyó al final, después de la 4
-> y la 5, porque no bloqueaba a ninguna: una skill entra por el system prompt y no
-> depende de los conectores ni del multiusuario.
+> La hoja de ruta original (1–5) está completa. La Fase 6 es lo que vino después:
+> la oficina deja de ser un panel y pasa a ser un sitio donde ves trabajar a tu equipo.
 
 Arranque rápido, variables de entorno y mapa de archivos: ver [`README.md`](./README.md).
 
@@ -116,6 +116,15 @@ Tablas implementadas (esquema real en `servidor/base-datos/migraciones.js`):
   archivo entero con su frontmatter, que es lo que se edita), **cuerpo** (solo las
   instrucciones, que es lo que se le da al modelo), activa, creado_en, actualizado_en
 - `personaje_skills`: personaje_id, skill_id
+
+- `personajes.especialidad` (en qué es bueno), `personajes.app` (con qué trabaja) y
+  `personajes.rango` (`secretario` | `manager` | `especialista`) — los tres campos que
+  mira el coordinador al repartir una misión
+- `misiones`: id, usuario_id, sala_id, coordinador_id, orden, titulo, estado
+  (`repartiendo` | `trabajando` | `resumiendo` | `lista` | `error` | `detenida`),
+  resultado, error, creado_en, actualizado_en
+- `mision_pasos`: id, mision_id, personaje_id, orden, encargo, estado, resultado,
+  error, modelo, tokens_entrada, tokens_salida, creado_en, terminado_en
 
 ## Sistema de salas
 
@@ -282,6 +291,52 @@ Cada IA es un personaje con:
   contaría por su cuenta; para eso haría falta Redis, y esto no lo justifica.
 - El despliegue asume **una sola instancia** con disco persistente. SQLite es un
   archivo: dos máquinas escribiendo el mismo volumen se corrompen entre sí.
+
+## Cómo está montada la oficina viva (Fase 6)
+
+- **La sala se dibuja con DOM y transformaciones CSS, no con canvas.** Tres razones
+  concretas: cada personaje es un `<button>` de verdad —se alcanza con el tabulador
+  y se pulsa—, los nombres son texto que un lector de pantalla sabe leer, y los
+  colores salen de las mismas variables, así que el tema oscuro sale gratis.
+- Las coordenadas viven en un **lienzo lógico de 1000 × 620** escalado con
+  `container-type`. El JS nunca toca píxeles reales: una sala se ve igual en un
+  portátil y en un móvil.
+- Cada personaje tiene su escritorio. Cuando no hay nada que hacer pasea; si se
+  cruza con otro, a veces se dicen algo. **Volver al escritorio estando ya en él no
+  cuenta como destino**: sería quedarse un ciclo entero quieto y la sala parecería
+  congelada.
+- Con `prefers-reduced-motion` no hay bucle de animación: cada uno se coloca donde
+  le toca y se queda ahí. La información es la misma; el movimiento no.
+- **Una misión mueve a la gente de verdad.** Mientras se reparte, los implicados se
+  juntan en la mesa; cuando empiezan, cada uno vuelve a su escritorio con la
+  insignia de su app; al terminar, se sueltan. Lo que se anima es el estado real de
+  cada paso, no una coreografía guionizada.
+- Las iniciales van en blanco sobre la cabeza, así que **la cabeza se oscurece con
+  `tintaLegible(color, { fondo: '#ffffff' })`** hasta que el blanco llega a 4.5:1.
+  Con el verde de Asistencia o el ámbar de Automatización en crudo se quedaban en
+  3:1. Lo mismo con el rótulo de la pizarra, que se calcula contra el fondo teñido
+  de la pizarra y no contra el lienzo.
+
+## Cómo funciona una misión (Fase 6)
+
+- Una misión es una orden tuya ejecutada por varios personajes. Tres tiempos, los
+  tres con llamadas reales al modelo: **reparto**, **trabajo** y **síntesis**.
+- Coordina el **secretario**; si no hay, el **manager**; si tampoco, el primer
+  especialista que pueda hablar. Alguien tiene que repartir, y es mejor eso que
+  negarse.
+- El coordinador ve la plantilla con nombre, especialidad, app y sala, y devuelve
+  JSON con quién hace qué. **Un plan que nombre a alguien que no existe se corrige
+  ahí**, no se le pasa al paso siguiente.
+- Los pasos van **en paralelo**: son independientes, y en serie una misión de cinco
+  tardaría cinco veces más sin ganar nada.
+- Un paso que falla **se cuenta, no rompe la misión**: la síntesis lo ve y lo dice.
+- **Cerrar la pestaña no aborta la misión.** El trabajo ya está pagado y en marcha;
+  tirarlo porque el navegador se fue sería desperdiciarlo. Se recoge al volver. Lo
+  que sí la corta es el botón de detener.
+- Una misión a medias no sobrevive a un reinicio: `cerrarHuerfanas()` la marca al
+  arrancar para que la interfaz no la enseñe girando para siempre.
+- Al cruzar la frontera con los adaptadores hay que hablar en `{ role, content }`,
+  como la API. El resto del backend usa español; ese punto no.
 
 ## Accesibilidad y rendimiento: lo que hay que respetar
 
