@@ -2,18 +2,20 @@
 
 Plano interactivo de una oficina donde cada **sala** es un departamento y cada
 **personaje** es una de tus IAs. Entras con Google o GitHub, ves el plano, entras en
-una sala, das de alta a tus personajes **y hablas con ellos de verdad**: cada uno con
-su persona, su modelo, su historial y las herramientas externas que le asignes.
+una sala, das de alta a tus personajes **y hablas con ellos de verdad**: cada uno con su
+persona, su modelo, su historial, los procedimientos que le enseñes y las
+herramientas externas que le prestes.
 
-**Fases 1, 2, 4 y 5 implementadas.** La 3 (skills) sigue pendiente y no bloquea nada
-de lo demás; el detalle está en [`CLAUDE.md`](./CLAUDE.md).
+**Las cinco fases están implementadas.** El detalle de cada una está en
+[`CLAUDE.md`](./CLAUDE.md).
 
 ```
 ┌─ Plano (SVG clicable) ─────────────────┐   ┌─ Sala ──────────┐   ┌─ Chat ─────────────┐
-│  Desarrollo │ Diseño │ Asistencia      │ → │ [NO] Nova       │ → │  ¿Por dónde empiezo?│
+│  Desarrollo │ Diseño │ Asistencia      │ → │ [NO] Nova       │ → │  Revísame este diff │
 │ ─────────── PASILLO ───────────────    │   │ Arquitecta      │   │  ▸ Cómo lo pensó    │
-│  Contenido  │ Automat. │ General       │   │ Claude · opus-5 │   │  Tres pasos: …      │
-└────────────────────────────────────────┘   └─────────────────┘   └─────────────────────┘
+│  Contenido  │ Automat. │ General       │   │ Claude · opus-5 │   │  ▸ Skill · Revisión │
+└────────────────────────────────────────┘   │ 2 skills · 1 🔌 │   │  Tres cosas: …      │
+                                             └─────────────────┘   └─────────────────────┘
 ```
 
 ---
@@ -226,6 +228,7 @@ Oficina-IA/
 │   │   └── herramientas.js    Lo que publica cada conector → herramientas del modelo
 │   ├── ia/                    Un archivo por proveedor, todos con la misma forma
 │   │   ├── proveedores.js     Registro: qué proveedor mueve a cada personaje
+│   │   ├── skills-en-contexto.js  Índice en el system prompt + herramienta abrir_skill
 │   │   ├── anthropic.js       SDK oficial, streaming, pensamiento resumido
 │   │   ├── openai.js          HTTP directo contra su SSE
 │   │   ├── google.js          Ídem para Gemini
@@ -234,7 +237,7 @@ Oficina-IA/
 │   │                          conversaciones, conectores)
 │   ├── rutas/                 autenticacion · api · salas · personajes · chat ·
 │   │                          conectores · equipo
-│   └── utilidades/            validacion.js · errores.js
+│   └── utilidades/            validacion.js · errores.js · frontmatter.js
 │
 ├── publico/                   Frontend — HTML/CSS/JS vanilla, sin compilar
 │   ├── index.html             Shell de la aplicación
@@ -250,6 +253,8 @@ Oficina-IA/
 │       ├── vista-plano.js     Plano SVG + lista de salas para móvil
 │       ├── vista-sala.js      Grilla de tarjetas de personaje
 │       ├── vista-chat.js      Conversación en streaming
+│       ├── vista-skills.js    Escribir, buscar, apagar y borrar skills
+│       ├── skills-de-personaje.js     Asignación por personaje
 │       ├── vista-conectores.js Alta, prueba y borrado de servidores MCP
 │       ├── vista-equipo.js    Quién entra y quién manda
 │       ├── conectores-de-personaje.js  Asignación y lista blanca por personaje
@@ -263,9 +268,10 @@ Oficina-IA/
 │   └── fly.toml               Configuración de Fly.io
 │
 ├── demo/oficina.html          La oficina en un archivo, sin servidor (ver §0)
-├── pruebas/                   49 pruebas, `npm run verificar`
+├── pruebas/                   63 pruebas, `npm run verificar`
 │   ├── oficina.prueba.js      Extremo a extremo de la Fase 1
 │   ├── chat.prueba.js         Extremo a extremo del chat
+│   ├── skills.prueba.js       Formato, asignación y qué llega de verdad al modelo
 │   ├── conectores.prueba.js   MCP de verdad por stdio contra un servidor de prueba
 │   ├── equipo.prueba.js       Roles, invitaciones y suspensión
 │   ├── proveedor-falso.js     Servidor que imita el SSE de los proveedores
@@ -292,6 +298,10 @@ Todo lo que cuelga de `/api` exige sesión iniciada y responde JSON.
 | `POST` | `/api/personajes/:id/conversacion/nueva` | Archiva el hilo actual y abre uno limpio. |
 | `GET` | `/api/personajes/:id/conversacion/:idHilo` | Relee un hilo archivado (solo los tuyos). |
 | `DELETE` | `/api/personajes/:id/mensajes/:idMensaje` | Borra un turno suelto del hilo abierto. |
+| `GET` | `/api/skills` · `/api/skills/:id` | Skills escritas. El detalle trae el archivo entero con su frontmatter. |
+| `POST` `PATCH` `DELETE` | `/api/skills` · `/api/skills/:id` | CRUD de skills (**solo admin**). Leerlas puede cualquiera. |
+| `POST` | `/api/skills/restaurar` | Deshacer un borrado, con su id original si sigue libre. |
+| `GET` `PUT` | `/api/personajes/:id/skills` | Qué skills lleva un personaje. |
 | `GET` | `/api/conectores` | Conectores MCP dados de alta. Sin secretos: solo los nombres de las claves. |
 | `POST` `PATCH` `DELETE` | `/api/conectores` · `/api/conectores/:id` | CRUD de conectores (**solo admin**). Uno en uso no se puede borrar. |
 | `POST` | `/api/conectores/:id/probar` | Abre el servidor MCP de verdad y guarda qué sabe hacer. |
@@ -371,7 +381,51 @@ quedan accesibles desde "Anteriores".
 
 ---
 
-## 8. Conectores y equipo, por dentro
+## 8. Skills, conectores y equipo, por dentro
+
+### Skills: índice siempre, instrucciones a petición
+
+Una skill es **Markdown con frontmatter**, con el espíritu de un `SKILL.md`:
+
+```markdown
+---
+nombre: Revisión de código
+descripcion: Busca errores reales en un diff, no cuestiones de estilo
+cuando-usarla: Cuando te pidan revisar código o un pull request
+etiquetas: código, revisión
+---
+
+# Cómo revisar
+
+1. Lee el diff entero antes de opinar.
+2. Un fallo es un fallo si puedes escribir la entrada que lo provoca.
+```
+
+**Lo que llega al modelo no es el archivo.** En el system prompt va solo el *índice*
+de sus skills —nombre, para qué sirve, cuándo sacarla—, que son tres líneas por
+skill. Las instrucciones completas se piden con la herramienta `abrir_skill`, y solo
+cuando encajan con lo que se ha preguntado.
+
+Volcar cada skill entera funciona con dos. Con diez se come el contexto, se paga en
+cada turno aunque no venga a cuento, y el modelo pierde de vista lo que de verdad le
+preguntaron. Hay una prueba que comprueba exactamente esto: que el índice está en el
+system prompt y que el cuerpo **no**, hasta que lo pide.
+
+Con un proveedor que todavía no sabe usar herramientas (OpenAI y Google aquí) el
+modelo no puede pedir nada. Ahí las skills entran enteras hasta un techo de
+caracteres, y lo que no cabe se le dice por su nombre — mejor que el personaje sepa
+que le falta algo a que improvise creyendo que lo tiene.
+
+**El analizador de frontmatter es propio**, un subconjunto de YAML de cien líneas:
+pares de una línea, listas con comas o guiones, bloques con `|`. Las claves se
+normalizan, así que `cuando-usarla`, `cuando_usarla` y `Cuando Usarla` son la misma —
+quien escribe la skill no debería tener que acertar el guion. Un YAML completo serían
+cien kilobytes de dependencia y una superficie de ataque que aquí no hace falta.
+
+**Una skill apagada sigue asignada pero no entra en contexto**, y el chat la enseña en
+gris. Es la respuesta a "¿por qué este personaje no está haciendo lo que le pedí?".
+
+### Conectores y equipo
 
 **Un conector es un servidor MCP.** El backend actúa de cliente: abre el servidor,
 pregunta qué sabe hacer y le ofrece esas herramientas al personaje que lo tenga
@@ -486,9 +540,17 @@ día, la migración es un trabajo con nombre y alcance claro, no un atajo.
 
 ---
 
-## 11. Qué falta
+## 11. Hasta aquí llega la hoja de ruta
 
-- **Fase 3** — Skills en Markdown con frontmatter, asignables a cada personaje. Es lo
-  único pendiente de la hoja de ruta; no bloquea nada de lo ya construido.
+Las cinco fases están construidas y funcionando de punta a punta. Lo que vendría
+después ya no está planificado; estas son las tres ideas que el código deja más a
+mano, por si algún día hacen falta:
 
-El detalle está en [`CLAUDE.md`](./CLAUDE.md).
+- **Skills con archivos adjuntos.** Hoy una skill es un archivo. Un `SKILL.md` de
+  verdad puede traer plantillas o scripts al lado; el hueco natural es una tabla
+  `skill_archivos` y una segunda herramienta junto a `abrir_skill`.
+- **Voz y visión por personaje.** El modelo de datos ya habla de "habilidades" como
+  algo activable por personaje; hoy solo existe el chat de texto.
+- **Turso**, el día que de verdad hagan falta varias instancias. Ver §10.
+
+El detalle de cada fase está en [`CLAUDE.md`](./CLAUDE.md).

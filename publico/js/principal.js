@@ -13,6 +13,7 @@ import { vistaSala } from './vista-sala.js';
 import { vistaChat } from './vista-chat.js';
 import { vistaConectores } from './vista-conectores.js';
 import { vistaEquipo } from './vista-equipo.js';
+import { vistaSkills } from './vista-skills.js';
 import { modalPersonaje } from './modal-personaje.js';
 import { modalSala } from './modal-sala.js';
 import { avatar } from './piezas.js';
@@ -99,6 +100,7 @@ const acciones = {
 
 const NAVEGACION = [
   { vista: 'plano', hash: '#/', texto: 'Plano', icono: 'oficina' },
+  { vista: 'skills', hash: '#/skills', texto: 'Skills', icono: 'manual' },
   { vista: 'conectores', hash: '#/conectores', texto: 'Conectores', icono: 'enchufe' },
   { vista: 'equipo', hash: '#/equipo', texto: 'Equipo', icono: 'usuarios', soloAdmin: true },
 ];
@@ -107,7 +109,7 @@ const NAVEGACION = [
 function pintarNavegacion() {
   const { vista } = rutaActual();
   // Las rutas de dentro de una sala o de un chat siguen colgando del plano.
-  const activa = ['conectores', 'equipo'].includes(vista) ? vista : 'plano';
+  const activa = ['skills', 'conectores', 'equipo'].includes(vista) ? vista : 'plano';
 
   reemplazar(
     zonaNavegacion,
@@ -197,6 +199,12 @@ function pintarVista() {
     }
     reemplazar(contenido, vistaChat(estado, personaje, acciones));
     document.title = `${personaje.nombre} · Oficina Black Hole`;
+    return;
+  }
+
+  if (vista === 'skills') {
+    reemplazar(contenido, vistaSkills(estado));
+    document.title = 'Skills · Oficina Black Hole';
     return;
   }
 

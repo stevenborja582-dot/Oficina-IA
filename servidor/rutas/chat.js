@@ -13,6 +13,8 @@ import * as conversaciones from '../repositorios/conversaciones.js';
 import { motivoSinChat, resolverProveedor } from '../ia/proveedores.js';
 import * as conectores from '../repositorios/conectores.js';
 import { describir, ejecutar, herramientasDe } from '../mcp/herramientas.js';
+import * as skillsRepo from '../repositorios/skills.js';
+import { HERRAMIENTA_ABRIR, prepararSkills } from '../ia/skills-en-contexto.js';
 import { ErrorHttp, errorPeticion } from '../utilidades/errores.js';
 import { LIMITES, textoObligatorio } from '../utilidades/validacion.js';
 import { limitar } from '../middlewares/limite-peticiones.js';
@@ -61,6 +63,11 @@ rutasChat.get('/:id/conversacion', (peticion, respuesta, siguiente) => {
       // Qué conectores lleva puestos, para que el chat lo diga antes de escribir.
       conectores: conectores.dePersonaje(personaje.id).map((c) => ({
         id: c.id, nombre: c.nombre, estado: c.estado, ultimo_error: c.ultimo_error,
+      })),
+      // Y qué skills. Una asignada pero apagada se muestra igual: es información
+      // sobre por qué el personaje no está haciendo lo que se espera de él.
+      skills: skillsRepo.dePersonaje(personaje.id).map((s) => ({
+        id: s.id, slug: s.slug, nombre: s.nombre, descripcion: s.descripcion, activa: s.activa,
       })),
     });
   } catch (error) {
@@ -183,15 +190,29 @@ rutasChat.post('/:id/mensajes', limitar('chat', 30, 60_000), async (peticion, re
     enviar({ tipo: 'aviso', texto: `El conector "${caido.conector}" no responde: ${caido.error}` });
   }
 
+  // Las skills asignadas: en el system prompt va el índice y, si el proveedor
+  // sabe pedirlas, la herramienta para abrir la que haga falta. Ver
+  // `servidor/ia/skills-en-contexto.js` para el porqué de no meterlas enteras.
+  const contextoSkills = prepararSkills(personaje, {
+    admiteHerramientas: Boolean(adaptador.admiteHerramientas),
+  });
+  const herramientas = contextoSkills.definicion
+    ? [contextoSkills.definicion, ...puente.definiciones]
+    : puente.definiciones;
+
   try {
     const flujo = adaptador.conversar({
-      sistema: personaje.persona_prompt?.trim() || null,
+      sistema: contextoSkills.sistema,
       mensajes: conversaciones.historialParaModelo(conversacion.id, configuracion.ia.mensajesDeContexto),
       modelo,
       senal: controlador.signal,
-      herramientas: puente.definiciones,
-      ejecutar: (nombre, argumentos) => ejecutar(puente.indice, nombre, argumentos),
-      describir: (nombre) => describir(puente.indice, nombre),
+      herramientas,
+      ejecutar: (nombre, argumentos) =>
+        (nombre === HERRAMIENTA_ABRIR && contextoSkills.abrir
+          ? contextoSkills.abrir(argumentos)
+          : ejecutar(puente.indice, nombre, argumentos)),
+      describir: (nombre) =>
+        (nombre === HERRAMIENTA_ABRIR ? 'Skill' : describir(puente.indice, nombre)),
     });
 
     for await (const trozo of flujo) {

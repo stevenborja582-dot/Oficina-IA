@@ -49,6 +49,9 @@ const TRAZOS = {
   rueda:    ['M12 3v3', 'M12 18v3', 'M3 12h3', 'M18 12h3', 'm5.6 5.6 2.1 2.1', 'm16.3 16.3 2.1 2.1',
              'm18.4 5.6-2.1 2.1', 'm7.7 16.3-2.1 2.1'],
   puerta:   ['M4 21h16', 'M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17', 'M14 12h.01'],
+  // Fase 3: un manual abierto — una skill es un procedimiento escrito.
+  manual:   ['M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H5.5A1.5 1.5 0 0 1 4 15.5z',
+             'M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h4.5a1.5 1.5 0 0 0 1.5-1.5z'],
 };
 
 export const ICONOS_SALA = ['codigo', 'paleta', 'chispa', 'pluma', 'rayo', 'oficina', 'brujula', 'cubo', 'grafico', 'escudo'];

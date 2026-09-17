@@ -215,6 +215,38 @@ export function vistaChat(estado, personaje, acciones) {
 
   /* — Cabecera — */
 
+  const chipsEquipamiento = elemento('div.personaje__chips.chat-equipamiento', { hidden: true });
+
+  /**
+   * Qué lleva puesto el personaje. Una skill apagada se enseña igual, en gris:
+   * es la explicación de por qué no está haciendo lo que se espera de él.
+   */
+  function pintarEquipamiento({ skills = [], conectores = [] }) {
+    const activas = skills.filter((skill) => skill.activa);
+    const apagadas = skills.filter((skill) => !skill.activa);
+    const caidos = conectores.filter((conector) => conector.estado === 'error');
+
+    const piezas = [
+      activas.length > 0 && elemento('span.chip.chip--neutro', {
+        title: activas.map((skill) => skill.nombre).join(', '),
+      }, [icono('manual'), `${activas.length} skill${activas.length === 1 ? '' : 's'}`]),
+
+      apagadas.length > 0 && elemento('span.chip.chip--neutro.chip--tenue', {
+        title: apagadas.map((skill) => skill.nombre).join(', ') +
+          ' — asignada(s) pero apagada(s): no entran en su contexto.',
+      }, [icono('manual'), `${apagadas.length} apagada${apagadas.length === 1 ? '' : 's'}`]),
+
+      conectores.length > 0 && elemento(`span.chip.${caidos.length > 0 ? 'chip--error' : 'chip--neutro'}`, {
+        title: caidos.length > 0
+          ? `No responden: ${caidos.map((c) => c.nombre).join(', ')}`
+          : conectores.map((c) => c.nombre).join(', '),
+      }, [icono('enchufe'), `${conectores.length} conector${conectores.length === 1 ? '' : 'es'}`]),
+    ].filter(Boolean);
+
+    reemplazar(chipsEquipamiento, ...piezas);
+    chipsEquipamiento.hidden = piezas.length === 0;
+  }
+
   const botonHistorial = elemento('button.boton', {
     type: 'button',
     title: 'Conversaciones anteriores',
@@ -243,6 +275,8 @@ export function vistaChat(estado, personaje, acciones) {
             }),
             personaje.modelo && elemento('span.chip.chip--neutro.mono', { texto: personaje.modelo }),
           ]),
+          // Con qué está trabajando: se rellena al cargar la conversación.
+          chipsEquipamiento,
         ]),
       ]),
     ]),
@@ -522,6 +556,7 @@ export function vistaChat(estado, personaje, acciones) {
       conversacionId = datos.conversacion.id;
       historico = datos.historico;
       compositor.hidden = false;
+      pintarEquipamiento({ skills: datos.skills ?? [], conectores: datos.conectores ?? [] });
       pintarMensajes(datos.mensajes);
 
       if (datos.chat.disponible) {

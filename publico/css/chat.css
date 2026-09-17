@@ -389,3 +389,8 @@
 @keyframes paso-late { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 
 .chat-conectores { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e2); }
+
+/* Lo que lleva puesto el personaje: skills y conectores, de un vistazo. */
+.chat-equipamiento { margin-top: var(--e2); }
+.chat-equipamiento svg { width: 13px; height: 13px; }
+.chip--tenue { color: var(--tinta-3); }

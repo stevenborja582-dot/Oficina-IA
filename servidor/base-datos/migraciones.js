@@ -170,6 +170,40 @@ const migraciones = [
       );
     `);
   },
+
+  // 6 — Fase 3: skills. Un comportamiento empaquetado que se escribe una vez y
+  //     se le presta a los personajes que lo necesiten.
+  //
+  //     El archivo entero se guarda en `fuente` tal y como se escribió, con su
+  //     frontmatter incluido: es lo que se edita y lo que se descarga. Los campos
+  //     sueltos (nombre, descripcion, cuando_usarla, etiquetas) son la cabecera ya
+  //     analizada, para poder listarlos y buscarlos sin releer el Markdown.
+  (db) => {
+    db.exec(`
+      CREATE TABLE skills (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug           TEXT    NOT NULL UNIQUE,
+        nombre         TEXT    NOT NULL,
+        descripcion    TEXT    NOT NULL DEFAULT '',
+        cuando_usarla  TEXT    NOT NULL DEFAULT '',
+        etiquetas      TEXT    NOT NULL DEFAULT '[]',
+        fuente         TEXT    NOT NULL,
+        cuerpo         TEXT    NOT NULL DEFAULT '',
+        activa         INTEGER NOT NULL DEFAULT 1,
+        creado_en      TEXT    NOT NULL,
+        actualizado_en TEXT    NOT NULL
+      );
+
+      CREATE TABLE personaje_skills (
+        personaje_id INTEGER NOT NULL REFERENCES personajes (id) ON DELETE CASCADE,
+        skill_id     INTEGER NOT NULL REFERENCES skills (id)     ON DELETE CASCADE,
+        creado_en    TEXT    NOT NULL,
+        PRIMARY KEY (personaje_id, skill_id)
+      );
+
+      CREATE INDEX idx_personaje_skills ON personaje_skills (personaje_id);
+    `);
+  },
 ];
 
 export function aplicarMigraciones(db) {

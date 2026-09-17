@@ -8,6 +8,7 @@ import { api } from './api.js';
 import { avisar, avisarError } from './notificaciones.js';
 import { ETIQUETA_ESTADO, ETIQUETA_PROVEEDOR } from './piezas.js';
 import { bloqueConectores } from './conectores-de-personaje.js';
+import { bloqueSkills } from './skills-de-personaje.js';
 
 const VACIO = {
   nombre: '',
@@ -119,6 +120,11 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, permi
       });
   if (conectores) campoProveedor.addEventListener('change', conectores.actualizarNota);
 
+  // Las skills también necesitan un personaje que ya exista para guardarse.
+  const skills = esNuevo
+    ? null
+    : bloqueSkills({ personaje, puedeEditar: Boolean(permisos.administrarSalas) });
+
   formulario.append(
     campo({ etiqueta: 'Nombre', control: campoNombre, obligatorio: true }),
     campo({ etiqueta: 'Rol', pista: 'Cómo lo llamas dentro del equipo.', control: campoRol }),
@@ -133,6 +139,7 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, permi
     bloqueEnlace,
     campo({ etiqueta: 'Avatar', pista: 'Si lo dejas vacío se usan sus iniciales sobre el color de la sala.', control: campoAvatar }),
     bloquePersona,
+    skills?.bloque,
     conectores?.bloque,
   );
 
@@ -166,6 +173,7 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, permi
       const respuesta = esNuevo
         ? await api.crearPersonaje(cuerpo)
         : await api.actualizarPersonaje(personaje.id, cuerpo);
+      if (skills) await skills.guardar(respuesta.personaje.id);
       if (conectores) await conectores.guardar(respuesta.personaje.id);
       cerrar();
       avisar(esNuevo ? `${respuesta.personaje.nombre} ya tiene escritorio.` : 'Cambios guardados.', {

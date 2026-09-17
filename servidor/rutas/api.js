@@ -12,6 +12,7 @@ import { rutasPersonajes } from './personajes.js';
 import { rutasChat } from './chat.js';
 import { rutasConectores, rutasConectoresDePersonaje } from './conectores.js';
 import { rutasEquipo } from './equipo.js';
+import { rutasSkills, rutasSkillsDePersonaje } from './skills.js';
 
 export const rutasApi = Router();
 
@@ -66,5 +67,7 @@ rutasApi.use('/salas', rutasSalas);
 rutasApi.use('/personajes', rutasPersonajes);
 rutasApi.use('/personajes', rutasChat);
 rutasApi.use('/personajes', rutasConectoresDePersonaje);
+rutasApi.use('/personajes', rutasSkillsDePersonaje);
 rutasApi.use('/conectores', rutasConectores);
+rutasApi.use('/skills', rutasSkills);
 rutasApi.use('/equipo', rutasEquipo);

@@ -11,12 +11,13 @@
 | --- | --- | --- |
 | **Fase 1** | Cimientos + oficina visual (login Google, SQLite, plano SVG, CRUD de salas y personajes) | ✅ **Implementada** |
 | **Fase 2** | Personajes con vida (chat real en streaming, historial, un adaptador por proveedor) | ✅ **Implementada** |
-| Fase 3 | Skills (Markdown + frontmatter, asignación por personaje, inyección en contexto) | ⬜ **Pendiente** |
+| **Fase 3** | Skills (Markdown + frontmatter, asignación por personaje, revelación progresiva en contexto) | ✅ **Implementada** |
 | **Fase 4** | Conectores MCP (cliente en el backend, asignación y lista blanca por personaje) | ✅ **Implementada** |
 | **Fase 5** | Multiusuario y despliegue (roles, invitaciones, login con GitHub, configuración de hosting) | ✅ **Implementada** |
 
-> La Fase 3 se saltó a propósito para no bloquear las dos siguientes: las skills se
-> inyectan en el system prompt y no dependen de nada de la 4 ni de la 5.
+> **La hoja de ruta está completa.** La Fase 3 se construyó al final, después de la 4
+> y la 5, porque no bloqueaba a ninguna: una skill entra por el system prompt y no
+> depende de los conectores ni del multiusuario.
 
 Arranque rápido, variables de entorno y mapa de archivos: ver [`README.md`](./README.md).
 
@@ -111,9 +112,9 @@ Tablas implementadas (esquema real en `servidor/base-datos/migraciones.js`):
   el historial
 - `invitaciones`: id, email, rol, creada_por, creada_en, usada_en
 
-Tablas previstas para la Fase 3 (todavía **no** creadas):
-
-- `skills`: id, slug, nombre, descripcion, contenido_markdown, etiquetas
+- `skills`: id, slug, nombre, descripcion, cuando_usarla, etiquetas, **fuente** (el
+  archivo entero con su frontmatter, que es lo que se edita), **cuerpo** (solo las
+  instrucciones, que es lo que se le da al modelo), activa, creado_en, actualizado_en
 - `personaje_skills`: personaje_id, skill_id
 
 ## Sistema de salas
@@ -193,8 +194,10 @@ Cada IA es un personaje con:
   para OpenAI y Google; `persona_prompt` como system prompt; historial persistente por
   usuario y personaje, con hilos anteriores consultables; interfaz de chat con
   Markdown, razonamiento resumido y botón de detener.
-- **Fase 3 — Skills** *(pendiente)*: formato de archivo (Markdown + frontmatter);
-  pantalla para subir/editar skills; asignación a personajes; inyección en el contexto.
+- **Fase 3 — Skills** *(hecha)*: formato de archivo (Markdown + frontmatter) con
+  analizador propio; pantalla para escribir, buscar, apagar y borrar skills;
+  asignación por personaje desde su ficha; y revelación progresiva en el contexto —
+  índice siempre, instrucciones a petición.
 - **Fase 4 — Conectores (MCP)** *(hecha)*: cliente MCP en el backend con pool de
   conexiones y alarmas; conectores por proceso (stdio) o remotos (HTTP); pantalla de
   alta y prueba contra el servidor real; asignación por personaje con lista blanca de
@@ -222,6 +225,30 @@ Cada IA es un personaje con:
 - El Markdown de las respuestas se compone en `publico/js/markdown.js` a mano, con
   nodos del DOM. Es texto que no controlamos: nunca pasa por `innerHTML` y los
   enlaces se limitan a `http`/`https`.
+
+## Cómo están montadas las skills (Fase 3)
+
+- Una skill es **Markdown con frontmatter**, como un `SKILL.md`. El archivo entero se
+  guarda en `fuente` —es lo que se edita— y la cabecera analizada va en columnas
+  sueltas para poder listar y buscar sin releer el Markdown en cada petición.
+- El analizador (`servidor/utilidades/frontmatter.js`) es un **subconjunto de YAML**
+  escrito a mano: pares de una línea, listas con comas o con guiones, y bloques con
+  `|`. Traer un YAML entero para esto serían cien kilobytes y una superficie de
+  ataque que no hace falta. Las claves se normalizan: `cuando-usarla`,
+  `cuando_usarla` y `Cuando Usarla` son la misma.
+- **Revelación progresiva, no volcado.** En el system prompt va siempre el *índice*
+  —nombre, para qué sirve, cuándo sacarla—, y las instrucciones se piden con la
+  herramienta `abrir_skill`. Meterlas enteras funciona con dos skills; con diez se
+  come el contexto y el modelo pierde de vista lo que importa.
+- Con un proveedor que **no sabe usar herramientas** (OpenAI y Google aquí) el modelo
+  no puede pedir nada: ahí entran enteras hasta un techo de caracteres, y lo que no
+  cabe se le dice por su nombre. Peor, pero honesto.
+- El `slug` **no cambia al editar**: es lo que el modelo tiene en la mano dentro de
+  una conversación en vuelo, igual que con los conectores.
+- Una skill **apagada** sigue asignada pero no entra en contexto. El chat la enseña en
+  gris: es la explicación de por qué el personaje no hace lo que se espera de él.
+- Leerlas puede cualquiera; escribirlas es de administradores. Una skill entra en el
+  system prompt de quien la lleve, así que quien la edita decide cómo responde.
 
 ## Cómo están montados los conectores (Fase 4)
 

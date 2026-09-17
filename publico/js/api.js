@@ -67,6 +67,17 @@ export const api = {
   asignarConectores: (personajeId, lista) =>
     pedir(`/api/personajes/${personajeId}/conectores`, { metodo: 'PUT', cuerpo: { conectores: lista } }),
 
+  // — Skills (Fase 3) ————————————————————————————————————————————
+  skills: () => pedir('/api/skills'),
+  skill: (id) => pedir(`/api/skills/${id}`),
+  crearSkill: (datos) => pedir('/api/skills', { metodo: 'POST', cuerpo: datos }),
+  actualizarSkill: (id, datos) => pedir(`/api/skills/${id}`, { metodo: 'PATCH', cuerpo: datos }),
+  eliminarSkill: (id) => pedir(`/api/skills/${id}`, { metodo: 'DELETE' }),
+  restaurarSkill: (skill) => pedir('/api/skills/restaurar', { metodo: 'POST', cuerpo: { skill } }),
+  skillsDe: (personajeId) => pedir(`/api/personajes/${personajeId}/skills`),
+  asignarSkills: (personajeId, ids) =>
+    pedir(`/api/personajes/${personajeId}/skills`, { metodo: 'PUT', cuerpo: { skills: ids } }),
+
   // — Equipo (Fase 5) ————————————————————————————————————————————
   equipo: () => pedir('/api/equipo'),
   cambiarUsuario: (id, cambios) => pedir(`/api/equipo/${id}`, { metodo: 'PATCH', cuerpo: cambios }),

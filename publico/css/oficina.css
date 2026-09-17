@@ -450,9 +450,27 @@
 .nav-principal a[aria-current="page"] { background: var(--superficie-2); color: var(--tinta); }
 .nav-principal svg { width: 16px; height: 16px; }
 @media (max-width: 719px) {
-  /* Solo iconos: el objetivo táctil sube a 44 px aunque se vaya la palabra. */
-  .nav-principal { margin-left: var(--e2); }
-  .nav-principal a { min-width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  /*
+   * En móvil la navegación baja a su propia fila. Con cuatro pestañas ya no cabe
+   * junto a la marca y los controles de sesión —desbordaba 34 px a 390—, y
+   * apretarla habría costado el objetivo táctil o la palabra. Una fila entera
+   * también las hace alcanzables con el pulgar sin apuntar.
+   */
+  .cabecera__interior { flex-wrap: wrap; padding-block: var(--e2); }
+  .nav-principal {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    border-top: 1px solid var(--linea);
+    padding-top: var(--e2);
+  }
+  .nav-principal a { flex: 1; min-width: 44px; min-height: 44px; padding: 0 var(--e2); justify-content: center; }
+  .nav-principal svg { width: 18px; height: 18px; }
+}
+/* Por debajo de 420 px se va la palabra y se queda el icono: cuatro etiquetas
+   no entran sin partirse. */
+@media (max-width: 419px) {
   .nav-principal__texto { display: none; }
   .nav-principal svg { width: 20px; height: 20px; }
 }
@@ -554,4 +572,56 @@
   .equipo__quien { flex-basis: calc(100% - 44px - var(--e3)); }
   .equipo__mandos { flex-basis: 100%; justify-content: flex-end; }
   .equipo__rol { min-height: 44px; flex: 1; }
+}
+
+/* ── Skills (Fase 3) ─────────────────────────────────────────────────────── */
+
+.skills { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+.skill { padding: var(--e5); gap: var(--e3); }
+/* Apagada: sigue ahí, pero no entra en el contexto de nadie. */
+.skill--apagada { background: var(--superficie-2); }
+.skill--apagada .personaje__nombre,
+.skill--apagada .personaje__rol { color: var(--tinta-3); }
+
+.skill__alto { display: flex; align-items: flex-start; gap: var(--e3); }
+.skill__id { min-width: 0; flex: 1; }
+.skill__icono {
+  display: grid; place-items: center; width: 40px; height: 40px; flex: none;
+  border-radius: var(--radio-2); background: var(--superficie-2); color: var(--tinta-2);
+}
+.skill__icono svg { width: 20px; height: 20px; }
+
+.skill__cuando {
+  padding: var(--e2) var(--e3);
+  border-left: 2px solid var(--linea-fuerte);
+  border-radius: 0 var(--radio-2) var(--radio-2) 0;
+  background: var(--superficie-2);
+  color: var(--tinta-2);
+  font-size: var(--t-micro);
+}
+.skill__cuando-etiqueta {
+  display: block;
+  font-family: var(--fuente-mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.skill__pie { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2) var(--e3); }
+.skill__etiquetas { display: flex; flex-wrap: wrap; gap: var(--e1); flex: 1; min-width: 0; }
+.skill__medidas { font-size: var(--t-nano); color: var(--tinta-3); white-space: nowrap; }
+
+/* El editor de la skill: es un archivo, así que se escribe en monoespaciada. */
+.campo--codigo {
+  min-height: 320px;
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+@media (max-width: 719px) {
+  .campo--codigo { min-height: 240px; }
 }
