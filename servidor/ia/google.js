@@ -13,6 +13,8 @@ export const proveedorGoogle = {
   configurado: () => Boolean(configuracion.ia.google.clave),
   modeloPorDefecto: () => configuracion.ia.google.modeloPorDefecto,
   variableClave: 'GOOGLE_AI_API_KEY',
+  // De momento el bucle de herramientas solo está escrito para Anthropic.
+  admiteHerramientas: false,
 
   async *conversar({ sistema, mensajes, modelo, senal }) {
     const { clave, urlBase } = configuracion.ia.google;

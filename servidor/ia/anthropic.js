@@ -55,49 +55,106 @@ export const proveedorAnthropic = {
   configurado: () => Boolean(configuracion.ia.anthropic.clave),
   modeloPorDefecto: () => configuracion.ia.anthropic.modeloPorDefecto,
   variableClave: 'ANTHROPIC_API_KEY',
+  // De momento el bucle de herramientas solo está escrito para Anthropic.
+  admiteHerramientas: true,
 
-  async *conversar({ sistema, mensajes, modelo, senal }) {
-    let flujo;
+  async *conversar({ sistema, mensajes, modelo, senal, herramientas = [], ejecutar = null, describir = null }) {
+    const cliente = obtenerCliente();
+    const turnos = mensajes.map((mensaje) => ({ role: mensaje.role, content: mensaje.content }));
+    const uso = { entrada: 0, salida: 0, cache: 0 };
+    const usadas = [];
+
     try {
-      flujo = obtenerCliente().messages.stream(
-        {
-          model: modelo,
-          max_tokens: configuracion.ia.maximoTokens,
-          // La persona del personaje es el system prompt. Va aparte de los mensajes
-          // para que el modelo no la confunda con algo que dijo el usuario.
-          ...(sistema ? { system: sistema } : {}),
-          messages: mensajes,
-          // El razonamiento se pide resumido a propósito: sin esto el chat se queda
-          // callado mientras el modelo piensa y parece colgado.
-          thinking: { type: 'adaptive', display: 'summarized' },
-          // Cachea el prefijo de la conversación: en un hilo largo, cada turno
-          // reenvía todo el historial y esto es lo que evita pagarlo entero.
-          cache_control: { type: 'ephemeral' },
-        },
-        { signal: senal },
-      );
+      for (let vuelta = 0; vuelta < configuracion.mcp.maximoVueltas; vuelta += 1) {
+        const flujo = cliente.messages.stream(
+          {
+            model: modelo,
+            max_tokens: configuracion.ia.maximoTokens,
+            // La persona del personaje es el system prompt. Va aparte de los mensajes
+            // para que el modelo no la confunda con algo que dijo el usuario.
+            ...(sistema ? { system: sistema } : {}),
+            messages: turnos,
+            ...(herramientas.length > 0 ? { tools: herramientas } : {}),
+            // El razonamiento se pide resumido a propósito: sin esto el chat se queda
+            // callado mientras el modelo piensa y parece colgado.
+            thinking: { type: 'adaptive', display: 'summarized' },
+            // Cachea el prefijo de la conversación: en un hilo largo, cada turno
+            // reenvía todo el historial y esto es lo que evita pagarlo entero.
+            cache_control: { type: 'ephemeral' },
+          },
+          { signal: senal },
+        );
 
-      for await (const evento of flujo) {
-        if (evento.type !== 'content_block_delta') continue;
-        if (evento.delta.type === 'text_delta') {
-          yield { tipo: 'texto', texto: evento.delta.text };
-        } else if (evento.delta.type === 'thinking_delta') {
-          yield { tipo: 'razonamiento', texto: evento.delta.thinking };
+        for await (const evento of flujo) {
+          if (evento.type !== 'content_block_delta') continue;
+          if (evento.delta.type === 'text_delta') {
+            yield { tipo: 'texto', texto: evento.delta.text };
+          } else if (evento.delta.type === 'thinking_delta') {
+            yield { tipo: 'razonamiento', texto: evento.delta.thinking };
+          }
         }
+
+        const final = await flujo.finalMessage();
+        uso.entrada += final.usage?.input_tokens ?? 0;
+        uso.salida += final.usage?.output_tokens ?? 0;
+        uso.cache += final.usage?.cache_read_input_tokens ?? 0;
+
+        // Una herramienta del servidor se quedó a medias: se reenvía el turno tal cual.
+        if (final.stop_reason === 'pause_turn') {
+          turnos.push({ role: 'assistant', content: final.content });
+          continue;
+        }
+
+        if (final.stop_reason !== 'tool_use') {
+          yield {
+            tipo: 'fin',
+            modelo: final.model,
+            motivo: final.stop_reason,
+            detalleParada: final.stop_reason === 'refusal' ? (final.stop_details ?? null) : null,
+            uso,
+            usadas,
+          };
+          return;
+        }
+
+        // El turno del asistente vuelve entero, con sus bloques de pensamiento:
+        // recortarlo rompe la continuidad del razonamiento del modelo.
+        turnos.push({ role: 'assistant', content: final.content });
+
+        const llamadas = final.content.filter((bloque) => bloque.type === 'tool_use');
+        const resultados = [];
+
+        for (const llamada of llamadas) {
+          const etiqueta = describir ? describir(llamada.name) : llamada.name;
+          yield { tipo: 'herramienta', id: llamada.id, nombre: llamada.name, etiqueta, entrada: llamada.input };
+
+          const resultado = ejecutar
+            ? await ejecutar(llamada.name, llamada.input)
+            : { texto: 'Este personaje no tiene conectores activos.', esError: true };
+
+          usadas.push({ nombre: llamada.name, etiqueta, ok: !resultado.esError });
+          yield { tipo: 'resultado', id: llamada.id, etiqueta, ok: !resultado.esError, resumen: resumir(resultado.texto) };
+
+          resultados.push({
+            type: 'tool_result',
+            tool_use_id: llamada.id,
+            content: resultado.texto,
+            ...(resultado.esError ? { is_error: true } : {}),
+          });
+        }
+
+        // Todos los resultados en un solo turno de usuario: repartirlos en varios
+        // le enseña al modelo a dejar de pedir herramientas en paralelo.
+        turnos.push({ role: 'user', content: resultados });
       }
 
-      const final = await flujo.finalMessage();
       yield {
         tipo: 'fin',
-        modelo: final.model,
-        motivo: final.stop_reason,
-        // `stop_details` solo viene cuando el modelo declina responder.
-        detalleParada: final.stop_reason === 'refusal' ? (final.stop_details ?? null) : null,
-        uso: {
-          entrada: final.usage?.input_tokens ?? null,
-          salida: final.usage?.output_tokens ?? null,
-          cache: final.usage?.cache_read_input_tokens ?? null,
-        },
+        modelo,
+        motivo: 'max_vueltas',
+        detalleParada: null,
+        uso,
+        usadas,
       };
     } catch (error) {
       if (esAborto(error)) return;
@@ -105,3 +162,9 @@ export const proveedorAnthropic = {
     }
   },
 };
+
+/** Una línea del resultado, para enseñarla en el hilo sin volcarlo entero. */
+function resumir(texto) {
+  const limpio = String(texto ?? '').replace(/\s+/g, ' ').trim();
+  return limpio.length > 140 ? limpio.slice(0, 139) + '…' : limpio;
+}

@@ -54,14 +54,15 @@ export function anadirMensaje({
   tokensEntrada = null,
   tokensSalida = null,
   error = null,
+  herramientas = null,
 }) {
   const momento = ahora();
   const resultado = bd()
     .prepare(
       `INSERT INTO mensajes (conversacion_id, rol, contenido, razonamiento, modelo, proveedor_ia,
-                             tokens_entrada, tokens_salida, error, creado_en)
+                             tokens_entrada, tokens_salida, error, herramientas, creado_en)
        VALUES (@conversacionId, @rol, @contenido, @razonamiento, @modelo, @proveedorIa,
-               @tokensEntrada, @tokensSalida, @error, @momento)`,
+               @tokensEntrada, @tokensSalida, @error, @herramientas, @momento)`,
     )
     .run({
       conversacionId,
@@ -73,6 +74,7 @@ export function anadirMensaje({
       tokensEntrada,
       tokensSalida,
       error,
+      herramientas: herramientas && herramientas.length ? JSON.stringify(herramientas) : null,
       momento,
     });
 

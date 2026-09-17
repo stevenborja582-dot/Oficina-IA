@@ -356,3 +356,33 @@
   .chat-cabecera .encabezado__acciones .boton__texto { display: none; }
   .chat-cabecera .encabezado__acciones .boton--acento .boton__texto { display: inline; }
 }
+
+/* ── Pasos de herramienta dentro de una respuesta ────────────────────────── */
+
+.pasos { display: grid; gap: var(--e2); }
+
+.paso {
+  display: flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-2);
+  background: var(--superficie-2);
+  font-size: var(--t-micro);
+  color: var(--tinta-2);
+}
+.paso__icono { width: 15px; height: 15px; flex: none; color: var(--tinta-3); }
+.paso--corriendo .paso__icono { color: var(--acento); animation: paso-late 1.2s ease-in-out infinite; }
+.paso--ok .paso__icono { color: var(--exito); }
+.paso--falla { border-color: var(--peligro-borde); background: var(--peligro-suave); color: var(--peligro); }
+.paso--falla .paso__icono { color: var(--peligro); }
+.paso__nombre { font-weight: 560; color: var(--tinta); }
+.paso--falla .paso__nombre { color: var(--peligro); }
+.paso__detalle {
+  min-width: 0; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@keyframes paso-late { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+
+.chat-conectores { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e2); }

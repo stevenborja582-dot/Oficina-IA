@@ -13,6 +13,8 @@ export const proveedorOpenai = {
   configurado: () => Boolean(configuracion.ia.openai.clave),
   modeloPorDefecto: () => configuracion.ia.openai.modeloPorDefecto,
   variableClave: 'OPENAI_API_KEY',
+  // De momento el bucle de herramientas solo está escrito para Anthropic.
+  admiteHerramientas: false,
 
   async *conversar({ sistema, mensajes, modelo, senal }) {
     const { clave, urlBase } = configuracion.ia.openai;

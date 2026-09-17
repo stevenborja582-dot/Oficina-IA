@@ -10,6 +10,7 @@ import { conEstadoChat, estadoProveedores } from '../ia/proveedores.js';
 import { rutasSalas } from './salas.js';
 import { rutasPersonajes } from './personajes.js';
 import { rutasChat } from './chat.js';
+import { rutasConectores, rutasConectoresDePersonaje } from './conectores.js';
 
 export const rutasApi = Router();
 
@@ -54,3 +55,5 @@ rutasApi.get('/oficina', (peticion, respuesta) => {
 rutasApi.use('/salas', rutasSalas);
 rutasApi.use('/personajes', rutasPersonajes);
 rutasApi.use('/personajes', rutasChat);
+rutasApi.use('/personajes', rutasConectoresDePersonaje);
+rutasApi.use('/conectores', rutasConectores);

@@ -57,6 +57,16 @@ export const api = {
 
   salir: () => pedir('/auth/salir', { metodo: 'POST' }),
 
+  // — Conectores MCP (Fase 4) ————————————————————————————————————
+  conectores: () => pedir('/api/conectores'),
+  crearConector: (datos) => pedir('/api/conectores', { metodo: 'POST', cuerpo: datos }),
+  actualizarConector: (id, datos) => pedir(`/api/conectores/${id}`, { metodo: 'PATCH', cuerpo: datos }),
+  eliminarConector: (id) => pedir(`/api/conectores/${id}`, { metodo: 'DELETE' }),
+  probarConector: (id) => pedir(`/api/conectores/${id}/probar`, { metodo: 'POST' }),
+  conectoresDe: (personajeId) => pedir(`/api/personajes/${personajeId}/conectores`),
+  asignarConectores: (personajeId, lista) =>
+    pedir(`/api/personajes/${personajeId}/conectores`, { metodo: 'PUT', cuerpo: { conectores: lista } }),
+
   // — Chat (Fase 2) ——————————————————————————————————————————————
   conversacion: (personajeId) => pedir(`/api/personajes/${personajeId}/conversacion`),
   conversacionArchivada: (personajeId, conversacionId) =>

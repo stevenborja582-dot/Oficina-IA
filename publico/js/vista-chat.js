@@ -38,7 +38,21 @@ function turnoUsuario(mensaje) {
  * llega la respuesta: el mismo componente sirve para el historial y para lo que
  * se está escribiendo ahora mismo.
  */
+/** Un paso: la llamada a una herramienta de un conector, con su desenlace. */
+function pasoHerramienta({ etiqueta, entrada = null, estado = 'corriendo', resumen = '' }) {
+  const nodo = elemento(`div.paso.paso--${estado}`, {}, [
+    icono(estado === 'falla' ? 'cerrar' : estado === 'ok' ? 'comprobado' : 'rueda', { clase: 'paso__icono' }),
+    elemento('span.paso__nombre', { texto: etiqueta }),
+    elemento('span.paso__detalle', {
+      texto: resumen || (entrada && Object.keys(entrada).length ? JSON.stringify(entrada) : ''),
+      title: resumen || '',
+    }),
+  ]);
+  return nodo;
+}
+
 function turnoAsistente(personaje, sala, mensaje = null) {
+  const pasos = elemento('div.pasos', { hidden: true });
   const contenido = elemento('div.turno__contenido.md');
   const razonamientoTexto = elemento('div.razonamiento__texto');
   const razonamiento = elemento('details.razonamiento', { hidden: true }, [
@@ -53,7 +67,7 @@ function turnoAsistente(personaje, sala, mensaje = null) {
 
   const nodo = elemento('article.turno.turno--asistente', {}, [
     avatar(personaje, sala.color_acento, { tamano: 30, redondo: true }),
-    elemento('div.turno__columna', {}, [razonamiento, contenido, aviso, pie]),
+    elemento('div.turno__columna', {}, [razonamiento, pasos, contenido, aviso, pie]),
   ]);
 
   let textoAcumulado = mensaje?.contenido ?? '';
@@ -102,6 +116,13 @@ function turnoAsistente(personaje, sala, mensaje = null) {
     aviso.hidden = false;
   }
 
+  if (mensaje?.herramientas?.length) {
+    pasos.hidden = false;
+    mensaje.herramientas.forEach((h) => {
+      pasos.append(pasoHerramienta({ etiqueta: h.etiqueta || h.nombre, estado: h.ok ? 'ok' : 'falla' }));
+    });
+  }
+
   if (mensaje) {
     ponerPie(mensaje);
     ponerAviso(mensaje.error);
@@ -130,6 +151,24 @@ function turnoAsistente(personaje, sala, mensaje = null) {
     },
     marcarPensando(activo) {
       nodo.classList.toggle('turno--pensando', activo);
+    },
+    abrirPaso(evento) {
+      pasos.hidden = false;
+      const nodoPaso = pasoHerramienta({ etiqueta: evento.etiqueta, entrada: evento.entrada });
+      nodoPaso.dataset.paso = evento.id;
+      pasos.append(nodoPaso);
+    },
+    cerrarPaso(evento) {
+      const nodoPaso = pasos.querySelector(`[data-paso="${CSS.escape(String(evento.id))}"]`);
+      const nuevo = pasoHerramienta({
+        etiqueta: evento.etiqueta,
+        estado: evento.ok ? 'ok' : 'falla',
+        resumen: evento.resumen,
+      });
+      nuevo.dataset.paso = evento.id;
+      if (nodoPaso) nodoPaso.replaceWith(nuevo);
+      else pasos.append(nuevo);
+      pasos.hidden = false;
     },
   };
 }
@@ -305,6 +344,15 @@ export function vistaChat(estado, personaje, acciones) {
           turno.marcarPensando(false);
           turno.agregarTexto(evento.texto);
           bajarSiProcede();
+        } else if (evento.tipo === 'herramienta') {
+          turno.marcarPensando(false);
+          turno.abrirPaso(evento);
+          bajarSiProcede();
+        } else if (evento.tipo === 'resultado') {
+          turno.cerrarPaso(evento);
+          bajarSiProcede();
+        } else if (evento.tipo === 'aviso') {
+          avisar(evento.texto, 'error');
         } else if (evento.tipo === 'fin') {
           recibioFin = true;
           turno.marcarPensando(false);

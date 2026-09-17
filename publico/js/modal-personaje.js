@@ -7,6 +7,7 @@ import { abrirModal, areaTexto, campo, entrada, mostrarErrorDeCampo, seleccion }
 import { api } from './api.js';
 import { avisar, avisarError } from './notificaciones.js';
 import { ETIQUETA_ESTADO, ETIQUETA_PROVEEDOR } from './piezas.js';
+import { bloqueConectores } from './conectores-de-personaje.js';
 
 const VACIO = {
   nombre: '',
@@ -23,9 +24,10 @@ const VACIO = {
  * @param {object} opciones.personaje  personaje a editar, o null para uno nuevo
  * @param {object} opciones.sala       sala de destino por defecto
  * @param {Array}  opciones.salas      todas las salas, para poder mudarlo
+ * @param {object} opciones.permisos   qué puede tocar quien tiene el modal abierto
  * @param {Function} opciones.alGuardar  callback tras guardar
  */
-export function modalPersonaje({ personaje = null, sala, salas, catalogos, alGuardar }) {
+export function modalPersonaje({ personaje = null, sala, salas, catalogos, permisos = {}, alGuardar }) {
   const esNuevo = !personaje;
   const datos = { ...VACIO, ...(personaje ?? {}) };
   const salaActual = personaje ? salas.find((s) => s.id === personaje.sala_id) ?? sala : sala;
@@ -104,6 +106,19 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, alGua
   }
   campoProveedor.addEventListener('change', ajustarAProveedor);
 
+  /**
+   * Los conectores se reparten sobre un personaje que ya existe: hace falta su
+   * id para guardar la asignación. En uno nuevo, se asignan al volver a abrirlo.
+   */
+  const conectores = esNuevo
+    ? null
+    : bloqueConectores({
+        personaje,
+        puedeEditar: Boolean(permisos.administrarSalas),
+        proveedorActual: () => campoProveedor.value,
+      });
+  if (conectores) campoProveedor.addEventListener('change', conectores.actualizarNota);
+
   formulario.append(
     campo({ etiqueta: 'Nombre', control: campoNombre, obligatorio: true }),
     campo({ etiqueta: 'Rol', pista: 'Cómo lo llamas dentro del equipo.', control: campoRol }),
@@ -118,6 +133,7 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, alGua
     bloqueEnlace,
     campo({ etiqueta: 'Avatar', pista: 'Si lo dejas vacío se usan sus iniciales sobre el color de la sala.', control: campoAvatar }),
     bloquePersona,
+    conectores?.bloque,
   );
 
   ajustarAProveedor();
@@ -150,6 +166,7 @@ export function modalPersonaje({ personaje = null, sala, salas, catalogos, alGua
       const respuesta = esNuevo
         ? await api.crearPersonaje(cuerpo)
         : await api.actualizarPersonaje(personaje.id, cuerpo);
+      if (conectores) await conectores.guardar(respuesta.personaje.id);
       cerrar();
       avisar(esNuevo ? `${respuesta.personaje.nombre} ya tiene escritorio.` : 'Cambios guardados.', {
         tipo: 'exito',

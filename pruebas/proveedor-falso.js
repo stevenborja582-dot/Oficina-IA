@@ -10,6 +10,9 @@ import http from 'node:http';
 export function crearProveedorFalso() {
   const peticiones = [];
   let guion = { tipo: 'ok', razonamiento: 'Lo pienso un momento.', texto: ['Hola, ', 'soy ', 'tu personaje.'] };
+  // Una secuencia permite guionizar varias vueltas seguidas: la primera pide una
+  // herramienta y la siguiente ya responde con el resultado en la mano.
+  let secuencia = null;
 
   const servidor = http.createServer(async (peticion, respuesta) => {
     const cuerpo = await new Promise((listo) => {
@@ -23,6 +26,9 @@ export function crearProveedorFalso() {
       cabeceras: peticion.headers,
       cuerpo: cuerpo ? JSON.parse(cuerpo) : null,
     });
+
+    // Si hay secuencia, cada petición consume un paso; el último se repite.
+    if (secuencia && secuencia.length > 0) guion = secuencia.length > 1 ? secuencia.shift() : secuencia[0];
 
     if (guion.tipo === 'error') {
       respuesta.writeHead(guion.estado ?? 500, { 'Content-Type': 'application/json' });
@@ -72,6 +78,26 @@ export function crearProveedorFalso() {
     }
 
     const indice = guion.razonamiento ? 1 : 0;
+
+    // Turno que pide una herramienta en vez de responder.
+    if (guion.herramienta) {
+      evento('content_block_start', {
+        type: 'content_block_start', index: indice,
+        content_block: { type: 'tool_use', id: guion.herramienta.id || 'toolu_prueba', name: guion.herramienta.nombre, input: {} },
+      });
+      evento('content_block_delta', {
+        type: 'content_block_delta', index: indice,
+        delta: { type: 'input_json_delta', partial_json: JSON.stringify(guion.herramienta.entrada ?? {}) },
+      });
+      evento('content_block_stop', { type: 'content_block_stop', index: indice });
+      evento('message_delta', {
+        type: 'message_delta', delta: { stop_reason: 'tool_use', stop_sequence: null }, usage: { output_tokens: 5 },
+      });
+      evento('message_stop', { type: 'message_stop' });
+      respuesta.end();
+      return;
+    }
+
     evento('content_block_start', { type: 'content_block_start', index: indice, content_block: { type: 'text', text: '' } });
     for (const trozo of guion.texto) {
       evento('content_block_delta', { type: 'content_block_delta', index: indice, delta: { type: 'text_delta', text: trozo } });
@@ -94,7 +120,12 @@ export function crearProveedorFalso() {
     peticiones,
     ultimaPeticion: () => peticiones[peticiones.length - 1],
     programar: (nuevo) => {
+      secuencia = null;
       guion = nuevo;
+    },
+    /** Guioniza varias vueltas seguidas del bucle de herramientas. */
+    programarSecuencia: (pasos) => {
+      secuencia = [...pasos];
     },
     escuchar: () =>
       new Promise((listo) => {

@@ -106,6 +106,21 @@ export const configuracion = {
     // Cuántos mensajes previos se reenvían como contexto.
     mensajesDeContexto: Math.max(2, numero('IA_MENSAJES_CONTEXTO', 40)),
   },
+
+  /**
+   * Conectores MCP. Un conector de tipo `stdio` lanza un proceso del sistema:
+   * en un servidor compartido eso es ejecución de código para cualquiera que
+   * administre la oficina, así que en producción viene apagado.
+   */
+  mcp: {
+    permitirStdio: booleano('MCP_PERMITIR_STDIO', !esProduccion),
+    esperaConexion: Math.max(2000, numero('MCP_ESPERA_CONEXION_MS', 20000)),
+    esperaLlamada: Math.max(2000, numero('MCP_ESPERA_LLAMADA_MS', 60000)),
+    minutosInactividad: Math.max(1, numero('MCP_MINUTOS_INACTIVIDAD', 15)),
+    maximoCaracteres: Math.max(500, numero('MCP_MAXIMO_CARACTERES', 12000)),
+    // Vueltas máximas del bucle de herramientas antes de cortar.
+    maximoVueltas: Math.max(1, numero('MCP_MAXIMO_VUELTAS', 8)),
+  },
 };
 
 /** Comprobaciones que deben hacer fallar el arranque antes de escuchar en el puerto. */

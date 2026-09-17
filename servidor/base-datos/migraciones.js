@@ -108,6 +108,50 @@ const migraciones = [
       CREATE INDEX idx_mensajes_conversacion ON mensajes (conversacion_id, id);
     `);
   },
+
+  // 3 — Fase 4: conectores MCP y su asignación a cada personaje.
+  (db) => {
+    db.exec(`
+      CREATE TABLE conectores (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug         TEXT    NOT NULL UNIQUE,
+        nombre       TEXT    NOT NULL,
+        descripcion  TEXT    NOT NULL DEFAULT '',
+        -- 'stdio' lanza un proceso local; 'http' habla con un servidor remoto.
+        transporte   TEXT    NOT NULL DEFAULT 'stdio' CHECK (transporte IN ('stdio', 'http')),
+        comando      TEXT    NOT NULL DEFAULT '',
+        argumentos   TEXT    NOT NULL DEFAULT '[]',
+        variables    TEXT    NOT NULL DEFAULT '{}',
+        url          TEXT    NOT NULL DEFAULT '',
+        cabeceras    TEXT    NOT NULL DEFAULT '{}',
+        -- Último listado de herramientas que devolvió el servidor.
+        herramientas TEXT    NOT NULL DEFAULT '[]',
+        estado       TEXT    NOT NULL DEFAULT 'sin_probar'
+                     CHECK (estado IN ('sin_probar', 'listo', 'error')),
+        ultimo_error TEXT,
+        probado_en   TEXT,
+        creado_en    TEXT    NOT NULL,
+        actualizado_en TEXT  NOT NULL
+      );
+
+      CREATE TABLE personaje_conectores (
+        personaje_id INTEGER NOT NULL REFERENCES personajes (id) ON DELETE CASCADE,
+        conector_id  INTEGER NOT NULL REFERENCES conectores (id) ON DELETE CASCADE,
+        -- Lista blanca de herramientas. Vacía = todas las del conector.
+        herramientas TEXT    NOT NULL DEFAULT '[]',
+        creado_en    TEXT    NOT NULL,
+        PRIMARY KEY (personaje_id, conector_id)
+      );
+
+      CREATE INDEX idx_personaje_conectores ON personaje_conectores (personaje_id);
+    `);
+  },
+
+  // 4 — Fase 4: qué herramientas usó cada respuesta, para que el hilo lo cuente
+  //     también después de recargar.
+  (db) => {
+    db.exec("ALTER TABLE mensajes ADD COLUMN herramientas TEXT");
+  },
 ];
 
 export function aplicarMigraciones(db) {

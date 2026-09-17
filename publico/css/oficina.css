@@ -396,3 +396,98 @@
   padding: var(--e10) var(--e5);
   text-align: center;
 }
+
+/* ── Conectores (Fase 4) ─────────────────────────────────────────────────── */
+
+.conectores { display: grid; gap: var(--e4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+.conector { padding: var(--e5); gap: var(--e3); }
+.conector__alto { display: flex; align-items: flex-start; gap: var(--e3); }
+.conector__id { min-width: 0; flex: 1; }
+.conector__icono {
+  display: grid; place-items: center; width: 40px; height: 40px; flex: none;
+  border-radius: var(--radio-2); background: var(--superficie-2); color: var(--tinta-2);
+}
+.conector__icono svg { width: 20px; height: 20px; }
+.conector__orden {
+  padding: var(--e2) var(--e3); border-radius: var(--radio-2);
+  background: var(--superficie-2); color: var(--tinta-2);
+  overflow-x: auto; white-space: nowrap;
+}
+.conector__herramientas { display: flex; flex-wrap: wrap; gap: var(--e1); }
+.conector__error {
+  padding: var(--e2) var(--e3); border: 1px solid var(--peligro-borde); border-radius: var(--radio-2);
+  background: var(--peligro-suave); color: var(--peligro); font-size: var(--t-micro);
+}
+.chip--exito { border-color: color-mix(in srgb, var(--exito) 35%, transparent);
+  background: color-mix(in srgb, var(--exito) 12%, var(--superficie)); color: var(--exito); }
+.chip--error { border-color: var(--peligro-borde); background: var(--peligro-suave); color: var(--peligro); }
+
+/* Navegación principal */
+.nav-principal { display: flex; gap: var(--e1); margin-left: var(--e4); }
+.nav-principal a {
+  display: inline-flex; align-items: center; gap: var(--e2);
+  min-height: 36px; padding: 0 var(--e3); border-radius: var(--radio-2);
+  color: var(--tinta-2); font-size: var(--t-ui); font-weight: 540; text-decoration: none;
+  transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva);
+}
+.nav-principal a:hover { background: var(--superficie-2); color: var(--tinta); }
+.nav-principal a[aria-current="page"] { background: var(--superficie-2); color: var(--tinta); }
+.nav-principal svg { width: 16px; height: 16px; }
+@media (max-width: 719px) {
+  /* Solo iconos: el objetivo táctil sube a 44 px aunque se vaya la palabra. */
+  .nav-principal { margin-left: var(--e2); }
+  .nav-principal a { min-width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+  .nav-principal__texto { display: none; }
+  .nav-principal svg { width: 20px; height: 20px; }
+}
+@media (max-width: 479px) {
+  .marca__texto { display: none; }
+}
+
+/* Asignación de conectores por personaje */
+.asignacion__bloque { gap: var(--e2); }
+.asignacion__bloque--inerte .asignacion { opacity: 0.62; }
+.asignacion { display: flex; flex-direction: column; gap: var(--e2); }
+
+.asignacion__fila {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-2);
+  background: var(--superficie);
+  transition: border-color var(--rapido) var(--curva), background var(--rapido) var(--curva);
+}
+.asignacion__fila--viva {
+  border-color: color-mix(in srgb, var(--acento) 45%, var(--linea));
+  background: color-mix(in srgb, var(--acento) 5%, var(--superficie));
+}
+.asignacion__fila:has(input:focus-visible) { border-color: var(--acento); }
+
+.asignacion__cabeza {
+  display: flex; align-items: center; gap: var(--e3);
+  min-height: 48px; padding: var(--e2) var(--e3);
+  cursor: pointer;
+}
+.asignacion__cabeza input { width: 18px; height: 18px; flex: none; accent-color: var(--acento); cursor: pointer; }
+.asignacion__icono {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: var(--radio-1); background: var(--superficie-2); color: var(--tinta-2);
+}
+.asignacion__icono svg { width: 16px; height: 16px; }
+.asignacion__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.asignacion__texto strong { font-size: var(--t-ui); font-weight: 560; }
+
+.asignacion__herramientas {
+  display: flex; flex-wrap: wrap; gap: var(--e1) var(--e3);
+  padding: var(--e2) var(--e3) var(--e3) calc(var(--e3) + 18px + var(--e3));
+  border-top: 1px dashed var(--linea);
+}
+.asignacion__herramienta {
+  display: inline-flex; align-items: center; gap: var(--e2);
+  min-height: 32px; font-size: var(--t-micro); color: var(--tinta-2); cursor: pointer;
+}
+.asignacion__herramienta input { width: 16px; height: 16px; accent-color: var(--acento); cursor: pointer; }
+
+@media (max-width: 719px) {
+  .asignacion__herramientas { padding-left: var(--e3); }
+  .asignacion__herramienta { min-height: 44px; }
+}

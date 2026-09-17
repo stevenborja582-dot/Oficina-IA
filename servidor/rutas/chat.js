@@ -11,6 +11,8 @@ import { configuracion } from '../configuracion.js';
 import * as personajes from '../repositorios/personajes.js';
 import * as conversaciones from '../repositorios/conversaciones.js';
 import { motivoSinChat, resolverProveedor } from '../ia/proveedores.js';
+import * as conectores from '../repositorios/conectores.js';
+import { describir, ejecutar, herramientasDe } from '../mcp/herramientas.js';
 import { ErrorHttp, errorPeticion } from '../utilidades/errores.js';
 import { LIMITES, textoObligatorio } from '../utilidades/validacion.js';
 
@@ -29,6 +31,7 @@ function estadoChat(personaje) {
 
 /** Lo que se manda al navegador: sin el prompt de sistema ni nada del servidor. */
 const mensajePublico = (mensaje) => ({
+  herramientas: mensaje.herramientas ? JSON.parse(mensaje.herramientas) : null,
   id: mensaje.id,
   rol: mensaje.rol,
   contenido: mensaje.contenido,
@@ -54,6 +57,10 @@ rutasChat.get('/:id/conversacion', (peticion, respuesta, siguiente) => {
       mensajes: conversaciones.mensajesDe(conversacion.id).map(mensajePublico),
       historico: conversaciones.historicoDe(personaje.id, peticion.user.id),
       chat: estadoChat(personaje),
+      // Qué conectores lleva puestos, para que el chat lo diga antes de escribir.
+      conectores: conectores.dePersonaje(personaje.id).map((c) => ({
+        id: c.id, nombre: c.nombre, estado: c.estado, ultimo_error: c.ultimo_error,
+      })),
     });
   } catch (error) {
     siguiente(error);
@@ -157,6 +164,21 @@ rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
   let uso = { entrada: null, salida: null, cache: null };
   let motivoParada = null;
   let fallo = null;
+  let usadas = [];
+
+  // Las herramientas de sus conectores, si es que tiene. Un conector caído se
+  // anuncia en el hilo y el personaje sigue con los que sí responden.
+  let puente = { definiciones: [], indice: new Map(), fallos: [] };
+  if (adaptador.admiteHerramientas) {
+    try {
+      puente = await herramientasDe(personaje.id);
+    } catch (error) {
+      puente.fallos.push({ conector: 'conectores', error: error.message });
+    }
+  }
+  for (const caido of puente.fallos) {
+    enviar({ tipo: 'aviso', texto: `El conector "${caido.conector}" no responde: ${caido.error}` });
+  }
 
   try {
     const flujo = adaptador.conversar({
@@ -164,6 +186,9 @@ rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
       mensajes: conversaciones.historialParaModelo(conversacion.id, configuracion.ia.mensajesDeContexto),
       modelo,
       senal: controlador.signal,
+      herramientas: puente.definiciones,
+      ejecutar: (nombre, argumentos) => ejecutar(puente.indice, nombre, argumentos),
+      describir: (nombre) => describir(puente.indice, nombre),
     });
 
     for await (const trozo of flujo) {
@@ -173,9 +198,14 @@ rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
       } else if (trozo.tipo === 'razonamiento') {
         razonamiento += trozo.texto;
         enviar({ tipo: 'razonamiento', texto: trozo.texto });
+      } else if (trozo.tipo === 'herramienta') {
+        enviar({ tipo: 'herramienta', id: trozo.id, etiqueta: trozo.etiqueta, entrada: trozo.entrada });
+      } else if (trozo.tipo === 'resultado') {
+        enviar({ tipo: 'resultado', id: trozo.id, etiqueta: trozo.etiqueta, ok: trozo.ok, resumen: trozo.resumen });
       } else if (trozo.tipo === 'fin') {
         uso = trozo.uso ?? uso;
         motivoParada = trozo.motivo ?? null;
+        usadas = trozo.usadas ?? [];
         if (trozo.modelo) modelo = trozo.modelo;
       }
     }
@@ -200,6 +230,8 @@ rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
     fallo = 'Respuesta detenida.';
   } else if (!fallo && motivoParada === 'max_tokens') {
     fallo = 'La respuesta llegó al techo de tokens y quedó a medias.';
+  } else if (!fallo && motivoParada === 'max_vueltas') {
+    fallo = 'Se quedó dando vueltas con las herramientas y hubo que pararlo.';
   }
 
   const mensajeAsistente = conversaciones.anadirMensaje({
@@ -212,6 +244,7 @@ rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
     tokensEntrada: uso.entrada,
     tokensSalida: uso.salida,
     error: fallo,
+    herramientas: usadas,
   });
 
   enviar({ tipo: 'fin', mensaje: mensajePublico(mensajeAsistente) });

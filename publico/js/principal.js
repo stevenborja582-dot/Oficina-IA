@@ -11,6 +11,7 @@ import { avisar, avisarError } from './notificaciones.js';
 import { vistaPlano } from './vista-plano.js';
 import { vistaSala } from './vista-sala.js';
 import { vistaChat } from './vista-chat.js';
+import { vistaConectores } from './vista-conectores.js';
 import { modalPersonaje } from './modal-personaje.js';
 import { modalSala } from './modal-sala.js';
 import { avatar } from './piezas.js';
@@ -20,6 +21,7 @@ aplicarTemaInicial();
 let estado = null;
 const contenido = buscar('#lienzo-vista');
 const zonaCabecera = buscar('#acciones-cabecera');
+const zonaNavegacion = buscar('#nav-principal');
 
 /* ── Acciones ────────────────────────────────────────────────────────────── */
 
@@ -50,6 +52,7 @@ const acciones = {
       sala,
       salas: estado.salas,
       catalogos: estado.catalogos,
+      permisos: estado.permisos,
       alGuardar: recargar,
     }),
 
@@ -59,6 +62,7 @@ const acciones = {
       sala: estado.salas.find((sala) => sala.id === personaje.sala_id),
       salas: estado.salas,
       catalogos: estado.catalogos,
+      permisos: estado.permisos,
       alGuardar: recargar,
     }),
 
@@ -91,6 +95,30 @@ const acciones = {
 };
 
 /* ── Cabecera ────────────────────────────────────────────────────────────── */
+
+const NAVEGACION = [
+  { vista: 'plano', hash: '#/', texto: 'Plano', icono: 'oficina' },
+  { vista: 'conectores', hash: '#/conectores', texto: 'Conectores', icono: 'enchufe' },
+];
+
+/** La navegación se repinta en cada cambio de ruta para marcar la pestaña viva. */
+function pintarNavegacion() {
+  const { vista } = rutaActual();
+  const activa = vista === 'conectores' ? 'conectores' : 'plano';
+
+  reemplazar(
+    zonaNavegacion,
+    ...NAVEGACION.map((entrada) =>
+      elemento('a.nav-principal__enlace', {
+        href: entrada.hash,
+        'aria-current': entrada.vista === activa ? 'page' : null,
+      }, [
+        icono(entrada.icono, { clase: 'nav-principal__icono' }),
+        elemento('span.nav-principal__texto', { texto: entrada.texto }),
+      ]),
+    ),
+  );
+}
 
 function pintarCabecera() {
   const usuario = estado.usuario;
@@ -140,6 +168,7 @@ function despedirVista() {
 function pintarVista() {
   if (!estado) return;
   despedirVista();
+  pintarNavegacion();
   const { vista, parametro } = rutaActual();
 
   if (vista === 'chat' && parametro) {
@@ -158,6 +187,12 @@ function pintarVista() {
     }
     reemplazar(contenido, vistaChat(estado, personaje, acciones));
     document.title = `${personaje.nombre} · Oficina Black Hole`;
+    return;
+  }
+
+  if (vista === 'conectores') {
+    reemplazar(contenido, vistaConectores(estado, recargar));
+    document.title = 'Conectores · Oficina Black Hole';
     return;
   }
 
