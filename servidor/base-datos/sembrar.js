@@ -44,6 +44,41 @@ export const SALAS_INICIALES = [
     icono: 'rayo',
   },
   {
+    slug: 'recepcion',
+    nombre: 'Recepción',
+    descripcion: 'Donde entran los encargos antes de repartirse por la oficina.',
+    color_acento: '#C2703D',
+    icono: 'puerta',
+  },
+  {
+    slug: 'investigacion',
+    nombre: 'Investigación',
+    descripcion: 'Buscar, leer, contrastar y traer datos con su fuente.',
+    color_acento: '#0EA5E9',
+    icono: 'brujula',
+  },
+  {
+    slug: 'datos',
+    nombre: 'Datos & Análisis',
+    descripcion: 'Hojas de cálculo, métricas, informes y todo lo que lleva números.',
+    color_acento: '#DB2777',
+    icono: 'grafico',
+  },
+  {
+    slug: 'producto',
+    nombre: 'Producto & Estrategia',
+    descripcion: 'Qué construir y en qué orden. Especificaciones y decisiones.',
+    color_acento: '#4F46E5',
+    icono: 'cubo',
+  },
+  {
+    slug: 'operaciones',
+    nombre: 'Operaciones',
+    descripcion: 'Proveedores, contratos, facturas y el papeleo que nadie quiere.',
+    color_acento: '#65A30D',
+    icono: 'escudo',
+  },
+  {
     slug: 'general',
     nombre: 'General',
     descripcion: 'Todo lo que aún no tiene sala propia.',
@@ -52,34 +87,126 @@ export const SALAS_INICIALES = [
   },
 ];
 
-/** Personajes de muestra, opcionales: sirven para ver el plano con vida el primer día. */
+/**
+ * Plantilla de oficina, opcional: un equipo completo con su reparto de rangos, para
+ * poder mandar una misión el primer día sin tener que inventarse a nadie.
+ * Los nombres son tuyos desde el momento en que los edites.
+ */
 const PERSONAJES_EJEMPLO = [
   {
+    sala: 'recepcion',
+    nombre: 'Pepita',
+    rol_titulo: 'Secretaria',
+    especialidad: 'Recibir encargos y repartirlos por la oficina',
+    app: 'Claude',
+    rango: 'secretario',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-opus-5',
+    persona_prompt:
+      'Eres Pepita, la secretaria de la oficina. Recibes un encargo, decides quién debe ' +
+      'hacer cada parte y lo repartes. No haces tú el trabajo: lo organizas.',
+    estado: 'activo',
+  },
+  {
+    sala: 'producto',
+    nombre: 'Axiom',
+    rol_titulo: 'Manager de producto',
+    especialidad: 'Decidir alcance, prioridades y criterios de "hecho"',
+    app: 'Notion',
+    rango: 'manager',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-opus-5',
+    persona_prompt:
+      'Eres Axiom. Conviertes ideas vagas en un alcance concreto: qué entra, qué no, y ' +
+      'cómo sabremos que está terminado. Decides; no enumeras opciones.',
+    estado: 'activo',
+  },
+  {
     sala: 'desarrollo',
-    nombre: 'Claude Code',
+    nombre: 'Berto',
     rol_titulo: 'Ingeniero de par',
+    especialidad: 'Escribir y revisar código, arquitectura, depuración',
+    app: 'Claude Code',
+    rango: 'especialista',
     proveedor_ia: 'anthropic',
     modelo: 'claude-opus-5',
     persona_prompt: 'Eres un ingeniero senior. Respondes con código concreto y sin rodeos.',
     estado: 'activo',
   },
   {
-    sala: 'asistencia',
-    nombre: 'Jarvis',
-    rol_titulo: 'Asistente de escritorio',
-    proveedor_ia: 'externo',
-    enlace_externo: 'https://example.com/jarvis',
-    persona_prompt: '',
+    sala: 'diseno',
+    nombre: 'Mimo',
+    rol_titulo: 'Diseñador de producto',
+    especialidad: 'Interfaces, jerarquía visual y sistemas de diseño',
+    app: 'Figma',
+    rango: 'especialista',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-opus-5',
+    persona_prompt:
+      'Eres Mimo. Diseñas interfaces sobrias y legibles. Hablas de jerarquía, espaciado ' +
+      'y contraste, no de "modernidad".',
     estado: 'activo',
   },
   {
     sala: 'contenido',
     nombre: 'Pluma',
     rol_titulo: 'Redactora jefe',
+    especialidad: 'Textos largos, guiones y correos publicables',
+    app: 'Obsidian',
+    rango: 'especialista',
     proveedor_ia: 'anthropic',
     modelo: 'claude-sonnet-5',
     persona_prompt: 'Escribes en español neutro, claro y sin relleno. Prefieres frases cortas.',
-    estado: 'borrador',
+    estado: 'activo',
+  },
+  {
+    sala: 'investigacion',
+    nombre: 'Nova',
+    rol_titulo: 'Investigadora',
+    especialidad: 'Buscar, contrastar y resumir con la fuente al lado',
+    app: 'Claude',
+    rango: 'especialista',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-sonnet-5',
+    persona_prompt:
+      'Eres Nova. Traes datos con su fuente. Si no la tienes, lo dices en vez de rellenar.',
+    estado: 'activo',
+  },
+  {
+    sala: 'datos',
+    nombre: 'Cifra',
+    rol_titulo: 'Analista',
+    especialidad: 'Métricas, hojas de cálculo e informes con números',
+    app: 'Excel',
+    rango: 'especialista',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-sonnet-5',
+    persona_prompt: 'Eres Cifra. Das cifras concretas y dices de dónde salen. Nada de "aproximadamente".',
+    estado: 'activo',
+  },
+  {
+    sala: 'automatizacion',
+    nombre: 'Rueda',
+    rol_titulo: 'Automatizador',
+    especialidad: 'Flujos, integraciones y tareas repetitivas',
+    app: 'n8n',
+    rango: 'especialista',
+    proveedor_ia: 'anthropic',
+    modelo: 'claude-sonnet-5',
+    persona_prompt: 'Eres Rueda. Conviertes procesos manuales en flujos. Piensas en pasos y disparadores.',
+    estado: 'activo',
+  },
+  {
+    sala: 'asistencia',
+    nombre: 'Jarvis',
+    rol_titulo: 'Asistente de escritorio',
+    especialidad: 'Agenda, recordatorios y apoyo del día a día',
+    app: 'Jarvis',
+    rango: 'especialista',
+    proveedor_ia: 'externo',
+    enlace_externo: 'https://example.com/jarvis',
+    persona_prompt: '',
+    estado: 'activo',
   },
 ];
 
@@ -113,10 +240,12 @@ export function sembrarPersonajesEjemplo() {
 
   const momento = ahora();
   const insertar = baseDatos.prepare(
-    `INSERT INTO personajes (sala_id, nombre, rol_titulo, avatar_url, persona_prompt, proveedor_ia,
-                             modelo, enlace_externo, estado, orden, creado_en, actualizado_en)
-     VALUES (@sala_id, @nombre, @rol_titulo, NULL, @persona_prompt, @proveedor_ia,
-             @modelo, @enlace_externo, @estado, @orden, @momento, @momento)`,
+    `INSERT INTO personajes (sala_id, nombre, rol_titulo, especialidad, app, rango, avatar_url,
+                             persona_prompt, proveedor_ia, modelo, enlace_externo, estado, orden,
+                             creado_en, actualizado_en)
+     VALUES (@sala_id, @nombre, @rol_titulo, @especialidad, @app, @rango, NULL,
+             @persona_prompt, @proveedor_ia, @modelo, @enlace_externo, @estado, @orden,
+             @momento, @momento)`,
   );
 
   let creados = 0;
@@ -128,6 +257,9 @@ export function sembrarPersonajesEjemplo() {
         sala_id: sala.id,
         nombre: personaje.nombre,
         rol_titulo: personaje.rol_titulo ?? '',
+        especialidad: personaje.especialidad ?? '',
+        app: personaje.app ?? '',
+        rango: personaje.rango ?? 'especialista',
         persona_prompt: personaje.persona_prompt ?? '',
         proveedor_ia: personaje.proveedor_ia,
         modelo: personaje.modelo ?? '',

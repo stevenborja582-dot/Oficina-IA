@@ -6,6 +6,22 @@ import { errorPeticion } from './errores.js';
 
 export const PROVEEDORES_IA = ['anthropic', 'openai', 'google', 'externo'];
 export const ESTADOS_PERSONAJE = ['activo', 'borrador', 'pausado'];
+
+/**
+ * Rango dentro de la oficina. Decide quién reparte el trabajo y quién lo hace:
+ * un secretario recibe la orden, un manager la descompone, un especialista ejecuta
+ * su parte. Si no hay ni secretario ni manager, el primer especialista coordina.
+ */
+export const RANGOS = ['secretario', 'manager', 'especialista'];
+
+/**
+ * Apps conocidas, solo para ofrecer sugerencias en el formulario. El campo es
+ * libre: la lista de herramientas la decides tú y crece sin tocar el código.
+ */
+export const APPS_SUGERIDAS = [
+  'Claude Code', 'Claude', 'ChatGPT', 'Gemini', 'Cursor', 'Figma', 'Notion',
+  'Obsidian', 'Excel', 'Photoshop', 'Canva', 'n8n', 'Zapier', 'GitHub', 'Slack',
+];
 export const ICONOS = [
   'codigo',
   'paleta',
@@ -35,6 +51,9 @@ export const ETIQUETAS_CAMPO = {
   avatar_url: 'avatar',
   persona_prompt: 'persona',
   proveedor_ia: 'proveedor',
+  especialidad: 'especialidad',
+  app: 'app',
+  rango: 'rango',
   modelo: 'modelo',
   enlace_externo: 'enlace externo',
   estado: 'estado',
@@ -44,6 +63,8 @@ export const etiquetaDe = (campo) => ETIQUETAS_CAMPO[campo] ?? campo;
 
 const LIMITES = {
   nombre: 60,
+  especialidad: 80,
+  app: 60,
   slug: 48,
   rol_titulo: 80,
   descripcion: 280,

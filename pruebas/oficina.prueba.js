@@ -96,18 +96,22 @@ test('el modo demo abre sesión y el primer usuario es admin', async () => {
   assert.equal(datos.usuario.rol, 'admin');
 });
 
-test('la oficina llega sembrada con las seis salas de la v1', async () => {
+test('la oficina llega sembrada con sus salas y ninguna se pisa con otra', async () => {
   const { estado, datos } = await pedir('/api/oficina');
   assert.equal(estado, 200);
-  assert.equal(datos.salas.length, 6);
-  assert.deepEqual(
-    datos.salas.map((sala) => sala.slug),
-    ['desarrollo', 'diseno', 'asistencia', 'contenido', 'automatizacion', 'general'],
-  );
-  // Ninguna sala se pisa con otra en el plano.
+
+  // Los seis departamentos de la v1 siguen ahí; la Fase 6 añadió cinco más.
+  const slugs = datos.salas.map((sala) => sala.slug);
+  for (const original of ['desarrollo', 'diseno', 'asistencia', 'contenido', 'automatizacion', 'general']) {
+    assert.ok(slugs.includes(original), `falta la sala original "${original}"`);
+  }
+  assert.ok(slugs.includes('recepcion'), 'Recepción es donde entran los encargos');
+
   const posiciones = new Set(datos.salas.map((sala) => `${sala.plano_x}:${sala.plano_y}`));
-  assert.equal(posiciones.size, 6);
-  assert.ok(datos.plano.alto >= 596, `alto inesperado: ${datos.plano.alto}`);
+  assert.equal(posiciones.size, datos.salas.length, 'dos salas ocupan la misma casilla');
+  // El lienzo crece con las filas que hagan falta.
+  const masBaja = Math.max(...datos.salas.map((sala) => sala.plano_y + sala.plano_alto));
+  assert.ok(datos.plano.alto > masBaja, `el lienzo no deja margen: ${datos.plano.alto} vs ${masBaja}`);
 });
 
 test('crear, editar, borrar y deshacer un personaje', async () => {
@@ -182,7 +186,13 @@ test('una sala nueva aterriza en un hueco libre y no se borra con gente dentro',
   assert.equal(creada.estado, 201);
   const sala = creada.datos.sala;
   assert.equal(sala.slug, 'investigacion-datos');
-  assert.equal(sala.plano_y, 586, 'la séptima sala abre una fila nueva del plano');
+
+  // Aterriza en la primera casilla libre, sin pisar a ninguna de las sembradas.
+  const { datos: antes } = await pedir('/api/oficina');
+  const ocupadas = antes.salas
+    .filter((entrada) => entrada.id !== sala.id)
+    .map((entrada) => `${entrada.plano_x}:${entrada.plano_y}`);
+  assert.ok(!ocupadas.includes(`${sala.plano_x}:${sala.plano_y}`), 'la sala nueva se pisa con otra');
 
   const inquilino = await pedir('/api/personajes', {
     method: 'POST',

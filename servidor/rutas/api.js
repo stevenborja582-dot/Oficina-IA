@@ -5,7 +5,7 @@ import { usuarioPublico } from '../repositorios/usuarios.js';
 import * as salas from '../repositorios/salas.js';
 import * as personajes from '../repositorios/personajes.js';
 import { PLANO, altoLienzo, pasillo } from '../base-datos/plano.js';
-import { ESTADOS_PERSONAJE, ICONOS, PROVEEDORES_IA, LIMITES } from '../utilidades/validacion.js';
+import { APPS_SUGERIDAS, ESTADOS_PERSONAJE, ICONOS, PROVEEDORES_IA, RANGOS, LIMITES } from '../utilidades/validacion.js';
 import { conEstadoChat, estadoProveedores } from '../ia/proveedores.js';
 import { rutasSalas } from './salas.js';
 import { rutasPersonajes } from './personajes.js';
@@ -13,6 +13,7 @@ import { rutasChat } from './chat.js';
 import { rutasConectores, rutasConectoresDePersonaje } from './conectores.js';
 import { rutasEquipo } from './equipo.js';
 import { rutasSkills, rutasSkillsDePersonaje } from './skills.js';
+import { rutasMisiones } from './misiones.js';
 
 export const rutasApi = Router();
 
@@ -58,6 +59,8 @@ rutasApi.get('/oficina', (peticion, respuesta) => {
       proveedores: PROVEEDORES_IA,
       estados: ESTADOS_PERSONAJE,
       iconos: ICONOS,
+      rangos: RANGOS,
+      apps: APPS_SUGERIDAS,
       limites: LIMITES,
     },
   });
@@ -70,4 +73,5 @@ rutasApi.use('/personajes', rutasConectoresDePersonaje);
 rutasApi.use('/personajes', rutasSkillsDePersonaje);
 rutasApi.use('/conectores', rutasConectores);
 rutasApi.use('/skills', rutasSkills);
+rutasApi.use('/misiones', rutasMisiones);
 rutasApi.use('/equipo', rutasEquipo);

@@ -21,6 +21,7 @@ import { rutasAutenticacion } from './rutas/autenticacion.js';
 import { rutasApi } from './rutas/api.js';
 import { cerrarBd } from './base-datos/conexion.js';
 import { cerrarTodas } from './mcp/cliente.js';
+import { cerrarHuerfanas } from './repositorios/misiones.js';
 
 const VERSION = '2.0.0';
 
@@ -28,6 +29,9 @@ const avisos = validarConfiguracion();
 
 bd();
 const siembra = sembrarSalasSiVacio();
+// Una misión a medias no sobrevive a un reinicio: se cierra para que la interfaz
+// no la enseñe girando para siempre.
+const huerfanas = cerrarHuerfanas();
 
 const app = express();
 app.disable('x-powered-by');
@@ -133,6 +137,7 @@ const servidor = app.listen(configuracion.puerto, () => {
   console.log(`  ↳ ${configuracion.urlBase}`);
   console.log(`  ↳ base de datos: ${configuracion.rutaBd}`);
   if (siembra.creadas > 0) console.log(`  ↳ salas sembradas: ${siembra.creadas}`);
+  if (huerfanas > 0) console.log(`  ↳ misiones cerradas por el reinicio: ${huerfanas}`);
   avisos.forEach((aviso) => console.log(`  ! ${aviso}`));
   console.log('');
 });

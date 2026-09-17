@@ -6,6 +6,7 @@ import {
   ESTADOS_PERSONAJE,
   LIMITES,
   PROVEEDORES_IA,
+  RANGOS,
   opcionDeLista,
   textoObligatorio,
   textoOpcional,
@@ -62,6 +63,15 @@ function camposDesde(cuerpo, { porDefecto = {} } = {}) {
   return {
     nombre: textoObligatorio(cuerpo.nombre ?? porDefecto.nombre, 'nombre', LIMITES.nombre),
     rol_titulo: textoOpcional(cuerpo.rol_titulo ?? porDefecto.rol_titulo, 'rol_titulo', LIMITES.rol_titulo),
+    // En qué es bueno y con qué trabaja: es lo que mira el coordinador al repartir.
+    especialidad: textoOpcional(cuerpo.especialidad ?? porDefecto.especialidad, 'especialidad', LIMITES.especialidad),
+    app: textoOpcional(cuerpo.app ?? porDefecto.app, 'app', LIMITES.app),
+    rango: opcionDeLista(
+      cuerpo.rango ?? porDefecto.rango,
+      'rango',
+      RANGOS,
+      porDefecto.rango ?? 'especialista',
+    ),
     avatar_url: urlOpcional(
       cuerpo.avatar_url === undefined ? porDefecto.avatar_url : cuerpo.avatar_url,
       'avatar_url',
@@ -97,9 +107,9 @@ export function crear(cuerpo) {
 
   const resultado = bd()
     .prepare(
-      `INSERT INTO personajes (sala_id, nombre, rol_titulo, avatar_url, persona_prompt,
+      `INSERT INTO personajes (sala_id, nombre, rol_titulo, especialidad, app, rango, avatar_url, persona_prompt,
                                proveedor_ia, modelo, enlace_externo, estado, orden, creado_en, actualizado_en)
-       VALUES (@sala_id, @nombre, @rol_titulo, @avatar_url, @persona_prompt,
+       VALUES (@sala_id, @nombre, @rol_titulo, @especialidad, @app, @rango, @avatar_url, @persona_prompt,
                @proveedor_ia, @modelo, @enlace_externo, @estado, @orden, @momento, @momento)`,
     )
     .run({ ...campos, sala_id: sala.id, orden: siguienteOrden(sala.id), momento });
@@ -116,7 +126,8 @@ export function actualizar(id, cuerpo) {
   bd()
     .prepare(
       `UPDATE personajes
-          SET sala_id = @sala_id, nombre = @nombre, rol_titulo = @rol_titulo, avatar_url = @avatar_url,
+          SET sala_id = @sala_id, nombre = @nombre, rol_titulo = @rol_titulo,
+              especialidad = @especialidad, app = @app, rango = @rango, avatar_url = @avatar_url,
               persona_prompt = @persona_prompt, proveedor_ia = @proveedor_ia, modelo = @modelo,
               enlace_externo = @enlace_externo, estado = @estado, orden = @orden, actualizado_en = @momento
         WHERE id = @id`,
@@ -144,9 +155,9 @@ export function restaurar(personaje) {
 
   const resultado = bd()
     .prepare(
-      `INSERT INTO personajes (id, sala_id, nombre, rol_titulo, avatar_url, persona_prompt,
+      `INSERT INTO personajes (id, sala_id, nombre, rol_titulo, especialidad, app, rango, avatar_url, persona_prompt,
                                proveedor_ia, modelo, enlace_externo, estado, orden, creado_en, actualizado_en)
-       VALUES (@id, @sala_id, @nombre, @rol_titulo, @avatar_url, @persona_prompt,
+       VALUES (@id, @sala_id, @nombre, @rol_titulo, @especialidad, @app, @rango, @avatar_url, @persona_prompt,
                @proveedor_ia, @modelo, @enlace_externo, @estado, @orden, @creado_en, @momento)`,
     )
     .run({

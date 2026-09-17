@@ -204,6 +204,56 @@ const migraciones = [
       CREATE INDEX idx_personaje_skills ON personaje_skills (personaje_id);
     `);
   },
+
+  // 7 — Fase 6: la oficina se pone a trabajar.
+  //
+  //     `especialidad` y `app` son lo que distingue a un personaje de otro cuando
+  //     hay que repartir una orden: en qué es bueno y con qué herramienta trabaja.
+  //     Una misión es esa orden ya descompuesta en pasos, cada uno con su
+  //     responsable y su resultado.
+  (db) => {
+    db.exec(`
+      ALTER TABLE personajes ADD COLUMN especialidad TEXT NOT NULL DEFAULT '';
+      ALTER TABLE personajes ADD COLUMN app TEXT NOT NULL DEFAULT '';
+      -- secretario | manager | especialista. Decide quién reparte y quién ejecuta.
+      ALTER TABLE personajes ADD COLUMN rango TEXT NOT NULL DEFAULT 'especialista';
+
+      CREATE TABLE misiones (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id    INTEGER NOT NULL REFERENCES usuarios (id) ON DELETE CASCADE,
+        sala_id       INTEGER          REFERENCES salas (id)    ON DELETE SET NULL,
+        coordinador_id INTEGER         REFERENCES personajes (id) ON DELETE SET NULL,
+        orden         TEXT    NOT NULL,
+        titulo        TEXT    NOT NULL DEFAULT '',
+        -- repartiendo | trabajando | resumiendo | lista | error | detenida
+        estado        TEXT    NOT NULL DEFAULT 'repartiendo',
+        resultado     TEXT    NOT NULL DEFAULT '',
+        error         TEXT,
+        creado_en     TEXT    NOT NULL,
+        actualizado_en TEXT   NOT NULL
+      );
+
+      CREATE TABLE mision_pasos (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        mision_id    INTEGER NOT NULL REFERENCES misiones (id)   ON DELETE CASCADE,
+        personaje_id INTEGER          REFERENCES personajes (id) ON DELETE SET NULL,
+        orden        INTEGER NOT NULL DEFAULT 0,
+        encargo      TEXT    NOT NULL,
+        -- pendiente | trabajando | lista | error
+        estado       TEXT    NOT NULL DEFAULT 'pendiente',
+        resultado    TEXT    NOT NULL DEFAULT '',
+        error        TEXT,
+        modelo       TEXT,
+        tokens_entrada INTEGER,
+        tokens_salida  INTEGER,
+        creado_en    TEXT    NOT NULL,
+        terminado_en TEXT
+      );
+
+      CREATE INDEX idx_misiones_usuario ON misiones (usuario_id, creado_en DESC);
+      CREATE INDEX idx_mision_pasos ON mision_pasos (mision_id, orden);
+    `);
+  },
 ];
 
 export function aplicarMigraciones(db) {
