@@ -251,6 +251,9 @@ a { color: var(--acento); text-underline-offset: 3px; }
   top: var(--e2);
   left: var(--e2);
   z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: var(--e2) var(--e4);
   background: var(--superficie);
   border: 1px solid var(--linea-fuerte);

@@ -11,9 +11,12 @@
 | --- | --- | --- |
 | **Fase 1** | Cimientos + oficina visual (login Google, SQLite, plano SVG, CRUD de salas y personajes) | ✅ **Implementada** |
 | **Fase 2** | Personajes con vida (chat real en streaming, historial, un adaptador por proveedor) | ✅ **Implementada** |
-| Fase 3 | Skills (Markdown + frontmatter, asignación por personaje, inyección en contexto) | ⬜ Pendiente |
-| Fase 4 | Conectores (cliente MCP en el backend, permisos por personaje) | ⬜ Pendiente |
-| Fase 5 | Multiusuario, pulido y despliegue (roles, más proveedores de login, Turso) | ⬜ Pendiente |
+| Fase 3 | Skills (Markdown + frontmatter, asignación por personaje, inyección en contexto) | ⬜ **Pendiente** |
+| **Fase 4** | Conectores MCP (cliente en el backend, asignación y lista blanca por personaje) | ✅ **Implementada** |
+| **Fase 5** | Multiusuario y despliegue (roles, invitaciones, login con GitHub, configuración de hosting) | ✅ **Implementada** |
+
+> La Fase 3 se saltó a propósito para no bloquear las dos siguientes: las skills se
+> inyectan en el system prompt y no dependen de nada de la 4 ni de la 5.
 
 Arranque rápido, variables de entorno y mapa de archivos: ver [`README.md`](./README.md).
 
@@ -99,12 +102,19 @@ Tablas implementadas (esquema real en `servidor/base-datos/migraciones.js`):
 - `mensajes`: id, conversacion_id, rol (`user`|`assistant`|`system`), contenido,
   razonamiento, modelo, proveedor_ia, tokens_entrada, tokens_salida, error, creado_en
 
-Tablas previstas para fases siguientes (todavía **no** creadas):
+- `conectores`: id, slug, nombre, descripcion, transporte (`stdio`|`http`), comando,
+  argumentos, url, variables, cabeceras, herramientas, estado, ultimo_error,
+  probado_en, creado_en, actualizado_en
+- `personaje_conectores`: personaje_id, conector_id, herramientas (lista blanca; vacía
+  = todas las que publique el conector)
+- `usuarios.estado` (`activo` | `suspendido`) — suspender cierra la puerta sin borrar
+  el historial
+- `invitaciones`: id, email, rol, creada_por, creada_en, usada_en
+
+Tablas previstas para la Fase 3 (todavía **no** creadas):
 
 - `skills`: id, slug, nombre, descripcion, contenido_markdown, etiquetas
 - `personaje_skills`: personaje_id, skill_id
-- `conectores`: id, nombre, tipo (`mcp_server`), config_json, alcance (`global`|`por_personaje`)
-- `personaje_conectores`: personaje_id, conector_id
 
 ## Sistema de salas
 
@@ -132,12 +142,17 @@ Cada IA es un personaje con:
 
 ## Autenticación
 
-- Login con Google vía Passport.js (`passport-google-oauth20`). Sesión persistente
-  (cookie + almacenamiento de sesión en la misma base SQLite).
-- Arquitectura de proveedores desacoplada para poder añadir después GitHub, Microsoft
-  o email/contraseña sin tocar el resto de la app.
-- La v1 de este sistema asume un solo usuario; el modelo de datos ya está listo para
-  roles (`admin` / `miembro`).
+- Login con Google (`passport-google-oauth20`) y GitHub (`passport-github2`) vía
+  Passport.js. Sesión persistente (cookie + almacenamiento de sesión en la misma base
+  SQLite). Los dos desembocan en `admitir()` → `registrarAcceso()`: añadir Microsoft o
+  email/contraseña es un `perfilXAUsuario`, una estrategia y un par de rutas.
+- Roles `admin` / `miembro` en vigor. **El primero que entra siempre es admin** — si
+  no, la oficina nacería sin nadie que pudiera invitar.
+- Tres puertas de acceso, y basta con una: `CORREOS_PERMITIDOS` (correos o dominios),
+  una invitación creada en la pantalla Equipo, o que no haya restricción configurada.
+- **La oficina nunca se queda sin ningún administrador activo.** Ni degradando, ni
+  suspendiendo, ni borrando al último: las tres se cierran en el repositorio, no solo
+  en la interfaz. Y nadie se cambia a sí mismo.
 
 ## Habilidades, skills y conectores
 
@@ -178,13 +193,17 @@ Cada IA es un personaje con:
   para OpenAI y Google; `persona_prompt` como system prompt; historial persistente por
   usuario y personaje, con hilos anteriores consultables; interfaz de chat con
   Markdown, razonamiento resumido y botón de detener.
-- **Fase 3 — Skills**: formato de archivo (Markdown + frontmatter); pantalla para
-  subir/editar skills; asignación a personajes; inyección en el contexto.
-- **Fase 4 — Conectores (MCP)**: cliente MCP en el backend; reutilización de servidores
-  MCP existentes; panel para conectar/desconectar conectores por personaje.
-- **Fase 5 — Multiusuario, pulido y despliegue**: roles admin/miembro; proveedores de
-  login adicionales; despliegue en hosting ligero + SQLite alojada (Turso); revisión
-  de accesibilidad y rendimiento con el mismo estándar que la v1.
+- **Fase 3 — Skills** *(pendiente)*: formato de archivo (Markdown + frontmatter);
+  pantalla para subir/editar skills; asignación a personajes; inyección en el contexto.
+- **Fase 4 — Conectores (MCP)** *(hecha)*: cliente MCP en el backend con pool de
+  conexiones y alarmas; conectores por proceso (stdio) o remotos (HTTP); pantalla de
+  alta y prueba contra el servidor real; asignación por personaje con lista blanca de
+  herramientas; bucle agéntico en el adaptador de Anthropic.
+- **Fase 5 — Multiusuario y despliegue** *(hecha)*: roles admin/miembro en vigor;
+  pantalla de Equipo con invitaciones, suspensión y baja; login con GitHub;
+  limitador de peticiones; apagado ordenado; configuración de Render y Fly.io con
+  disco persistente. **Turso se evaluó y se descartó por ahora** — ver el porqué en
+  `README.md`, §Sobre Turso.
 
 ## Cómo está montado el chat (Fase 2)
 
@@ -203,6 +222,57 @@ Cada IA es un personaje con:
 - El Markdown de las respuestas se compone en `publico/js/markdown.js` a mano, con
   nodos del DOM. Es texto que no controlamos: nunca pasa por `innerHTML` y los
   enlaces se limitan a `http`/`https`.
+
+## Cómo están montados los conectores (Fase 4)
+
+- Un conector es un **servidor MCP**. `servidor/mcp/cliente.js` mantiene un pool de
+  conexiones vivas por conector, con alarma de tiempo, cierre por inactividad y
+  recorte del resultado antes de que entre en el contexto del modelo.
+- Los nombres de herramienta que ve el modelo son `slug__herramienta`. El slug **no
+  cambia al renombrar** el conector: una conversación en vuelo no se puede romper a
+  mitad porque alguien edite un nombre.
+- Los secretos (`variables`, `cabeceras`) **no viajan al navegador**: solo los nombres
+  de las claves. Al editar, un campo vacío significa "deja los de antes".
+- Un conector de tipo proceso **ejecuta código**. Por eso su alta es solo de
+  administradores y en producción viene apagado (`MCP_PERMITIR_STDIO`). El entorno del
+  proceso se acota a `PATH` más las variables del propio conector.
+- Solo Anthropic sabe usar herramientas hoy (`admiteHerramientas: true`); el bucle
+  agéntico vive en su adaptador. Los demás proveedores conversan y ya está.
+- Una herramienta que falla vuelve al modelo como `is_error`, nunca como excepción: el
+  hilo no se rompe y el chat lo enseña como un paso plegable.
+
+## Cómo está montado el equipo (Fase 5)
+
+- `servidor/rutas/equipo.js` es todo de administradores. Dos reglas que hace cumplir
+  el repositorio, no la interfaz: **la oficina nunca se queda sin ningún
+  administrador activo**, y **nadie se cambia a sí mismo** (para eso está otro admin).
+- **Suspender no es borrar.** Suspender cierra la puerta y conserva el historial; al
+  rechazar al usuario, `deserializeUser` vacía su sesión, así que la cookie que ya
+  tenía deja de valer en la siguiente petición. Borrar se lleva también sus
+  conversaciones: son suyas, no del personaje.
+- El limitador de peticiones (`middlewares/limite-peticiones.js`) es una ventana
+  deslizante **en memoria**, apagada en desarrollo. Con varias instancias cada una
+  contaría por su cuenta; para eso haría falta Redis, y esto no lo justifica.
+- El despliegue asume **una sola instancia** con disco persistente. SQLite es un
+  archivo: dos máquinas escribiendo el mismo volumen se corrompen entre sí.
+
+## Accesibilidad y rendimiento: lo que hay que respetar
+
+- `tintaLegible()` acepta el fondo contra el que se va a leer. Un chip o un avatar
+  tiñen su propio fondo con el color de la sala (10 % y 16 %), así que se les pasa
+  `variablesSala(color, { tinte })`. Calcularlo contra el lienzo deja los textos en
+  4.1–4.5:1 — por debajo de AA, y sin que se note a ojo.
+- **44 px de objetivo táctil en móvil**, incluidos los que pierden su etiqueta al
+  encogerse: un botón con solo icono sigue necesitando sus 44 de ancho.
+- La jerarquía de encabezados no salta niveles. Entre el `h1` de la pantalla y el `h3`
+  de una tarjeta va un `h2` del grupo: visible si aporta, `.solo-lectores` si sería ruido.
+- Ningún control se queda sin nombre accesible. Un `placeholder` no lo es: desaparece
+  al escribir.
+- **El chat no se comprime.** El filtro de `compression` deja fuera `text/event-stream`
+  a propósito; comprimirlo haría que la respuesta llegue a golpes en vez de palabra a
+  palabra. Hay una prueba que lo vigila.
+- El `modulepreload` de `index.html` y `entrar.html` se calcula a partir del grafo de
+  imports: si añades un módulo al arranque, añade también su enlace.
 
 ## Convenciones de código
 

@@ -234,7 +234,9 @@ select.control {
   border-color: var(--tinta);
   color: var(--lienzo);
 }
-@media (max-width: 719px) { .filtro { min-height: 40px; } }
+/* Había dos reglas para esto, y ganaba la de 40 px: por debajo del mínimo que
+   se anuncia arriba. Una sola, y en 44. */
+@media (max-width: 719px) { .filtro { min-height: 44px; } }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
 

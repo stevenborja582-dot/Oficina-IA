@@ -18,6 +18,11 @@
   <link rel="stylesheet" href="/css/componentes.css">
   <link rel="stylesheet" href="/css/entrar.css">
   <script type="module" src="/js/entrar.js"></script>
+  <!-- El grafo de módulos tiene cinco niveles: sin esto el navegador los
+       descubre de uno en uno y encadena cinco vueltas de red antes de arrancar. -->
+  <link rel="modulepreload" href="/js/dom.js">
+  <link rel="modulepreload" href="/js/iconos.js">
+  <link rel="modulepreload" href="/js/tema.js">
 </head>
 <body>
   <main class="entrada">
@@ -27,8 +32,8 @@
         <p class="etiqueta-seccion">Oficina Black Hole · v2</p>
         <h1 class="entrada__titular">Tu equipo de IA, en un plano.</h1>
         <p class="entrada__parrafo">
-          Seis salas, un personaje por cada inteligencia que uses y un solo sitio
-          desde el que abrir a cualquiera de ellos.
+          Una sala por departamento, un personaje por cada inteligencia que uses y
+          un solo sitio desde el que hablar con cualquiera de ellos.
         </p>
 
         <svg class="entrada__boceto" viewBox="0 0 440 260" fill="none">
@@ -50,7 +55,7 @@
           </g>
         </svg>
       </div>
-      <p class="entrada__nota">Fase 1 · Cimientos + oficina visual</p>
+      <p class="entrada__nota">Chat en streaming · Conectores MCP · Equipo</p>
     </section>
 
     <!-- Lado funcional -->
@@ -83,6 +88,13 @@
               <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/>
             </svg>
             Continuar con Google
+          </a>
+
+          <a class="boton boton--proveedor boton--bloque" id="entrar-github" href="/auth/github" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.7 1.2 3.4.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/>
+            </svg>
+            Continuar con GitHub
           </a>
 
           <p class="acceso__separador" id="separador-demo" hidden>o</p>

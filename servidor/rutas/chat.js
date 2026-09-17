@@ -15,6 +15,7 @@ import * as conectores from '../repositorios/conectores.js';
 import { describir, ejecutar, herramientasDe } from '../mcp/herramientas.js';
 import { ErrorHttp, errorPeticion } from '../utilidades/errores.js';
 import { LIMITES, textoObligatorio } from '../utilidades/validacion.js';
+import { limitar } from '../middlewares/limite-peticiones.js';
 
 export const rutasChat = Router({ mergeParams: true });
 
@@ -108,7 +109,9 @@ rutasChat.post('/:id/conversacion/nueva', (peticion, respuesta, siguiente) => {
 
 /* ── Hablar ──────────────────────────────────────────────────────────────── */
 
-rutasChat.post('/:id/mensajes', async (peticion, respuesta, siguiente) => {
+// Cada mensaje abre una petición de pago al proveedor: el techo protege la
+// factura tanto como al servidor.
+rutasChat.post('/:id/mensajes', limitar('chat', 30, 60_000), async (peticion, respuesta, siguiente) => {
   let personaje;
   let conversacion;
   let adaptador;

@@ -8,6 +8,7 @@
 import path from 'node:path';
 import express from 'express';
 import session from 'express-session';
+import compression from 'compression';
 
 import { configuracion, validarConfiguracion } from './configuracion.js';
 import { bd } from './base-datos/conexion.js';
@@ -18,6 +19,10 @@ import { cabecerasSeguridad, verificarOrigen } from './middlewares/seguridad.js'
 import { manejadorErrores, rutaNoEncontrada } from './middlewares/manejo-errores.js';
 import { rutasAutenticacion } from './rutas/autenticacion.js';
 import { rutasApi } from './rutas/api.js';
+import { cerrarBd } from './base-datos/conexion.js';
+import { cerrarTodas } from './mcp/cliente.js';
+
+const VERSION = '2.0.0';
 
 const avisos = validarConfiguracion();
 
@@ -27,6 +32,22 @@ const siembra = sembrarSalasSiVacio();
 const app = express();
 app.disable('x-powered-by');
 if (configuracion.esProduccion) app.set('trust proxy', 1);
+
+/**
+ * Comprimir el texto que sale: 128 KB de módulos ES se quedan en unos 35.
+ *
+ * El chat queda fuera a propósito. Un stream SSE comprimido se acumula en el
+ * búfer del compresor y llega a golpes en vez de palabra a palabra, que es justo
+ * lo que hace que la respuesta se lea mientras se escribe.
+ */
+app.use(
+  compression({
+    filter: (peticion, respuesta) => {
+      if (respuesta.getHeader('Content-Type')?.toString().includes('text/event-stream')) return false;
+      return compression.filter(peticion, respuesta);
+    },
+  }),
+);
 
 app.use(cabecerasSeguridad);
 app.use(express.json({ limit: '128kb' }));
@@ -53,8 +74,17 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(verificarOrigen);
 
+/**
+ * Sonda de salud para el hosting. Contesta antes que la sesión y sin tocar
+ * Passport: si la base de datos responde, la instancia está viva.
+ */
 app.get('/salud', (_peticion, respuesta) => {
-  respuesta.json({ ok: true, entorno: configuracion.entorno, version: '2.0.0-fase1' });
+  try {
+    bd().prepare('SELECT 1').get();
+    respuesta.json({ ok: true, entorno: configuracion.entorno, version: VERSION });
+  } catch (error) {
+    respuesta.status(503).json({ ok: false, error: error.message });
+  }
 });
 
 app.use('/auth', rutasAutenticacion);
@@ -99,7 +129,7 @@ app.use(manejadorErrores);
 
 const servidor = app.listen(configuracion.puerto, () => {
   console.log('');
-  console.log('  ▄ Oficina Black Hole v2 — Fase 1');
+  console.log(`  ▄ Oficina Black Hole v${VERSION}`);
   console.log(`  ↳ ${configuracion.urlBase}`);
   console.log(`  ↳ base de datos: ${configuracion.rutaBd}`);
   if (siembra.creadas > 0) console.log(`  ↳ salas sembradas: ${siembra.creadas}`);
@@ -107,9 +137,30 @@ const servidor = app.listen(configuracion.puerto, () => {
   console.log('');
 });
 
-const apagar = (senal) => {
+/**
+ * Apagado ordenado. El hosting manda SIGTERM en cada despliegue, así que esto se
+ * ejecuta a diario: primero se deja de aceptar conexiones, después se cierran los
+ * servidores MCP —son procesos hijos, y sin esto quedarían huérfanos— y por último
+ * se cierra SQLite para que el WAL quede consolidado en disco.
+ */
+let apagando = false;
+const apagar = async (senal) => {
+  if (apagando) return;
+  apagando = true;
   console.log(`\nCerrando (${senal})…`);
-  servidor.close(() => process.exit(0));
+
+  // Si algo se atasca, el hosting nos mataría igual: mejor salir a tiempo.
+  const rendicion = setTimeout(() => process.exit(0), 10_000);
+  rendicion.unref();
+
+  servidor.close();
+  try {
+    await cerrarTodas();
+  } catch {
+    // Un conector que no cierra limpio no debe impedir el apagado.
+  }
+  cerrarBd();
+  process.exit(0);
 };
 process.on('SIGINT', () => apagar('SIGINT'));
 process.on('SIGTERM', () => apagar('SIGTERM'));

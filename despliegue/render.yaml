@@ -1,0 +1,73 @@
+# Despliegue en Render — https://render.com
+#
+# Por qué Render y no otro: la oficina guarda su estado en un archivo SQLite, así
+# que necesita un disco que sobreviva a los despliegues. Render lo monta como un
+# volumen y no pide Docker, así que el mismo `npm start` que usas en tu equipo
+# vale aquí. Fly.io sirve igual de bien (ver README, §Despliegue).
+#
+# Antes de desplegar, en el panel de Render:
+#   1. Crea el servicio a partir de este archivo (Blueprint).
+#   2. Rellena las variables marcadas como `sync: false`: son secretos y no
+#      pueden vivir en el repositorio.
+#   3. Añade la URI de redirección real en Google y/o GitHub:
+#        https://TU-DOMINIO.onrender.com/auth/google/callback
+#        https://TU-DOMINIO.onrender.com/auth/github/callback
+
+services:
+  - type: web
+    name: oficina-black-hole
+    runtime: node
+    plan: starter          # el plan gratuito no tiene disco persistente
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /salud
+
+    disk:
+      name: datos
+      mountPath: /var/datos
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUERTO
+        value: 10000
+      # Render expone el dominio del propio servicio: así URL_BASE nunca se
+      # queda desfasada respecto a dónde vive de verdad.
+      - key: URL_BASE
+        fromService:
+          type: web
+          name: oficina-black-hole
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: RUTA_BD
+        value: /var/datos/oficina.sqlite
+      - key: SECRETO_SESION
+        generateValue: true
+      # El login de demo es una puerta abierta: el servidor se niega a arrancar
+      # si esto es `true` con NODE_ENV=production.
+      - key: AUTH_PERMITIR_DEMO
+        value: false
+      # Un conector de tipo proceso ejecuta órdenes del sistema. En un servidor
+      # compartido eso es ejecución de código: apagado salvo que sepas lo que haces.
+      - key: MCP_PERMITIR_STDIO
+        value: false
+
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: ADMINS
+        sync: false
+      - key: CORREOS_PERMITIDOS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_AI_API_KEY
+        sync: false

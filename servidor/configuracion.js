@@ -41,6 +41,8 @@ const rutaBd = path.isAbsolute(rutaBdCruda) ? rutaBdCruda : path.join(RAIZ, ruta
 
 const googleClientId = texto('GOOGLE_CLIENT_ID');
 const googleClientSecret = texto('GOOGLE_CLIENT_SECRET');
+const githubClientId = texto('GITHUB_CLIENT_ID');
+const githubClientSecret = texto('GITHUB_CLIENT_SECRET');
 const permitirDemo = booleano('AUTH_PERMITIR_DEMO', !esProduccion);
 
 /** Secreto de sesión: obligatorio y largo en producción, tolerante en desarrollo. */
@@ -71,6 +73,12 @@ export const configuracion = {
     clientSecret: googleClientSecret,
     callbackUrl: `${urlBase}/auth/google/callback`,
     configurado: Boolean(googleClientId && googleClientSecret),
+  },
+  github: {
+    clientId: githubClientId,
+    clientSecret: githubClientSecret,
+    callbackUrl: `${urlBase}/auth/github/callback`,
+    configurado: Boolean(githubClientId && githubClientSecret),
   },
   admins: lista('ADMINS'),
   correosPermitidos: lista('CORREOS_PERMITIDOS'),
@@ -138,15 +146,25 @@ export function validarConfiguracion() {
     throw new Error('En producción URL_BASE debe usar https:// (la cookie de sesión viaja como Secure).');
   }
 
-  if (!configuracion.google.configurado) {
+  // Basta con un proveedor de login. En producción, con ninguno, nadie entraría
+  // nunca — así que es un fallo de arranque, no un aviso.
+  const proveedoresLogin = [
+    configuracion.google.configurado && 'Google',
+    configuracion.github.configurado && 'GitHub',
+  ].filter(Boolean);
+
+  if (proveedoresLogin.length === 0) {
     if (configuracion.esProduccion) {
-      throw new Error('Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET: sin ellos no hay forma de entrar.');
+      throw new Error(
+        'Ningún proveedor de login configurado: rellena GOOGLE_CLIENT_ID/SECRET o ' +
+          'GITHUB_CLIENT_ID/SECRET. Sin ellos no hay forma de entrar.',
+      );
     }
     avisos.push(
-      'Google OAuth sin configurar (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET vacíos).' +
+      'Sin proveedores de login (Google y GitHub vacíos).' +
         (configuracion.permitirDemo
           ? ' Puedes entrar con el botón "Entrar en modo demo".'
-          : ' Nadie podrá iniciar sesión hasta que los rellenes.'),
+          : ' Nadie podrá iniciar sesión hasta que rellenes uno.'),
     );
   }
 

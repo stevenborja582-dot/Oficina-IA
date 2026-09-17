@@ -152,6 +152,24 @@ const migraciones = [
   (db) => {
     db.exec("ALTER TABLE mensajes ADD COLUMN herramientas TEXT");
   },
+
+  // 5 — Fase 5: la oficina deja de ser de una sola persona.
+  //     `estado` permite cerrarle la puerta a alguien sin borrar su historial, y
+  //     las invitaciones mueven la lista de acceso del archivo .env a la interfaz.
+  (db) => {
+    db.exec(`
+      ALTER TABLE usuarios ADD COLUMN estado TEXT NOT NULL DEFAULT 'activo';
+
+      CREATE TABLE invitaciones (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        email      TEXT    NOT NULL UNIQUE,
+        rol        TEXT    NOT NULL DEFAULT 'miembro',
+        creada_por INTEGER          REFERENCES usuarios (id) ON DELETE SET NULL,
+        creada_en  TEXT    NOT NULL,
+        usada_en   TEXT
+      );
+    `);
+  },
 ];
 
 export function aplicarMigraciones(db) {

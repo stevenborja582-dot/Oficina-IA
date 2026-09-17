@@ -67,6 +67,13 @@ export const api = {
   asignarConectores: (personajeId, lista) =>
     pedir(`/api/personajes/${personajeId}/conectores`, { metodo: 'PUT', cuerpo: { conectores: lista } }),
 
+  // — Equipo (Fase 5) ————————————————————————————————————————————
+  equipo: () => pedir('/api/equipo'),
+  cambiarUsuario: (id, cambios) => pedir(`/api/equipo/${id}`, { metodo: 'PATCH', cuerpo: cambios }),
+  eliminarUsuario: (id) => pedir(`/api/equipo/${id}`, { metodo: 'DELETE' }),
+  invitar: (datos) => pedir('/api/equipo/invitaciones', { metodo: 'POST', cuerpo: datos }),
+  revocarInvitacion: (id) => pedir(`/api/equipo/invitaciones/${id}`, { metodo: 'DELETE' }),
+
   // — Chat (Fase 2) ——————————————————————————————————————————————
   conversacion: (personajeId) => pedir(`/api/personajes/${personajeId}/conversacion`),
   conversacionArchivada: (personajeId, conversacionId) =>

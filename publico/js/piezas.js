@@ -31,7 +31,7 @@ export function iniciales(nombre) {
  * Es el hueco por el que entrarán los retratos vectoriales más adelante.
  */
 export function avatar(personaje, color, { tamano = 44, redondo = false } = {}) {
-  const { '--sala-color': salaColor, '--sala-tinta': salaTinta } = variablesSala(color);
+  const { '--sala-color': salaColor, '--sala-tinta': salaTinta } = variablesSala(color, { tinte: 0.16 });
 
   const nodo = elemento(`div.avatar${redondo ? '.avatar--redondo' : ''}`, {
     variables: {
@@ -64,7 +64,7 @@ export function avatar(personaje, color, { tamano = 44, redondo = false } = {}) 
 }
 
 export function chip(texto, { color = null, punto = false, neutro = false } = {}) {
-  const variables = color ? variablesSala(color) : null;
+  const variables = color ? variablesSala(color, { tinte: 0.1 }) : null;
   return elemento(`span.chip${neutro ? '.chip--neutro' : ''}`, {
     variables: variables
       ? { '--chip-color': variables['--sala-color'], '--chip-tinta': variables['--sala-tinta'] }

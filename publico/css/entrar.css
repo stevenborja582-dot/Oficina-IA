@@ -139,3 +139,11 @@
 }
 
 .acceso__pie { font-size: var(--t-micro); color: var(--tinta-3); }
+
+/* Segundo proveedor: mismo peso visual que Google, sin competir con él. */
+.boton--proveedor {
+  min-height: 48px;
+  font-size: var(--t-cuerpo);
+  font-weight: 560;
+}
+.boton--proveedor svg { width: 18px; height: 18px; }

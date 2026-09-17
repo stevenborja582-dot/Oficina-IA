@@ -5,12 +5,14 @@ import { elemento, reemplazar } from './dom.js';
 aplicarTemaInicial();
 
 const MENSAJES_ERROR = {
-  google: 'Google rechazó el acceso o la cuenta no está autorizada. Revisa ADMINS y CORREOS_PERMITIDOS en tu .env.',
+  google: 'Google rechazó el acceso o la cuenta no está autorizada.',
+  github: 'GitHub rechazó el acceso o la cuenta no está autorizada.',
   sesion: 'Tu sesión caducó. Vuelve a entrar.',
 };
 
 const aviso = document.getElementById('aviso');
 const botonGoogle = document.getElementById('entrar-google');
+const botonGitHub = document.getElementById('entrar-github');
 const botonDemo = document.getElementById('entrar-demo');
 const separador = document.getElementById('separador-demo');
 
@@ -26,6 +28,14 @@ async function iniciar() {
   const codigo = new URLSearchParams(window.location.search).get('error');
   if (codigo && MENSAJES_ERROR[codigo]) {
     mostrarAviso(MENSAJES_ERROR[codigo], { error: true });
+    // El servidor sabe por qué falló —suspendido, fuera de la lista— y lo dice
+    // mejor que un mensaje genérico. Es texto nuestro, no de la barra de direcciones.
+    try {
+      const { motivo } = await (await fetch('/auth/motivo', { headers: { Accept: 'application/json' } })).json();
+      if (motivo) mostrarAviso(motivo, { error: true });
+    } catch {
+      // Sin motivo concreto nos quedamos con el mensaje del diccionario.
+    }
   }
 
   let estado;
@@ -41,17 +51,23 @@ async function iniciar() {
     return;
   }
 
+  const conProveedor = estado.proveedores.google || estado.proveedores.github;
   botonGoogle.hidden = !estado.proveedores.google;
+  botonGitHub.hidden = !estado.proveedores.github;
   botonDemo.hidden = !estado.proveedores.demo;
-  separador.hidden = !(estado.proveedores.google && estado.proveedores.demo);
+  separador.hidden = !(conProveedor && estado.proveedores.demo);
 
-  if (!estado.proveedores.google && !codigo) {
+  if (!conProveedor && !codigo) {
     mostrarAviso(
       elemento('span', {}, [
-        'Google OAuth todavía no está configurado. Rellena ',
+        'Todavía no hay ningún proveedor de acceso configurado. Rellena ',
         elemento('code', { texto: 'GOOGLE_CLIENT_ID' }),
-        ' y ',
+        '/',
         elemento('code', { texto: 'GOOGLE_CLIENT_SECRET' }),
+        ' o ',
+        elemento('code', { texto: 'GITHUB_CLIENT_ID' }),
+        '/',
+        elemento('code', { texto: 'GITHUB_CLIENT_SECRET' }),
         ' en tu archivo .env y reinicia el servidor.',
       ]),
     );
@@ -67,7 +83,10 @@ async function iniciar() {
         method: 'POST',
         headers: { Accept: 'application/json', 'X-Peticion-Oficina': '1' },
       });
-      if (!respuesta.ok) throw new Error('El modo demo está desactivado en el servidor.');
+      if (!respuesta.ok) {
+        const datos = await respuesta.json().catch(() => ({}));
+        throw new Error(datos.error || 'El modo demo está desactivado en el servidor.');
+      }
       window.location.assign('/');
     } catch (error) {
       botonDemo.disabled = false;

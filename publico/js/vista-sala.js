@@ -223,7 +223,14 @@ export function vistaSala(estado, sala, acciones) {
     );
   }
 
-  seccion.append(encabezado, barra, rejilla);
+  seccion.append(
+    encabezado,
+    barra,
+    // El escalón entre el h1 de la sala y el h3 de cada tarjeta. No se ve: el
+    // nombre de la sala ya está arriba, repetirlo sería ruido para quien mira.
+    elemento('h2.solo-lectores', { texto: `Personajes de ${sala.nombre}` }),
+    rejilla,
+  );
   pintar();
   return seccion;
 }

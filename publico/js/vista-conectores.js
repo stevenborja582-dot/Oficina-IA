@@ -168,6 +168,8 @@ export function modalConector({ conector = null, alGuardar }) {
 export function vistaConectores(estado, recargarVista) {
   const rejilla = elemento('div.conectores');
   const seccion = elemento('section');
+  // Entre el h1 de la pantalla y el h3 de cada tarjeta hacía falta este escalón.
+  const tituloLista = elemento('h2.solo-lectores', { texto: 'Conectores dados de alta' });
 
   const acciones = {
     editar: (conector) => modalConector({ conector, alGuardar: cargar }),
@@ -259,6 +261,7 @@ export function vistaConectores(estado, recargarVista) {
         }, [icono('mas', { clase: 'boton__icono' }), 'Nuevo conector']),
       ]),
     ]),
+    tituloLista,
     rejilla,
   );
 

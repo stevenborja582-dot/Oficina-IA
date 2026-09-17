@@ -266,6 +266,8 @@ export function vistaPlano(estado, acciones) {
   const campo = elemento('input.control', {
     type: 'search',
     id: 'buscar-oficina',
+    // El placeholder desaparece al escribir: el nombre accesible no puede depender de él.
+    'aria-label': 'Buscar un personaje o una sala',
     placeholder: 'Buscar un personaje o una sala…',
     autocomplete: 'off',
     'aria-describedby': 'ayuda-buscar',

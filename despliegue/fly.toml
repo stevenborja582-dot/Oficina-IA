@@ -1,0 +1,54 @@
+# Despliegue en Fly.io — https://fly.io
+#
+# Alternativa a Render con el mismo criterio: un volumen persistente para el
+# archivo SQLite. Fly sí construye con Docker, pero la imagen la genera él
+# (`fly launch` detecta Node); no hace falta Docker en tu equipo.
+#
+#   fly launch --no-deploy --copy-config --config despliegue/fly.toml
+#   fly volumes create datos --size 1 --region mad
+#   fly secrets set SECRETO_SESION=$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")
+#   fly secrets set GOOGLE_CLIENT_ID=… GOOGLE_CLIENT_SECRET=… ADMINS=tu@correo.com
+#   fly deploy
+#
+# Importante: una sola instancia. SQLite es un archivo, no un servidor; dos
+# máquinas escribiendo el mismo volumen se corrompen entre sí.
+
+app = "oficina-black-hole"
+primary_region = "mad"
+
+[build]
+  builder = "heroku/builder:22"
+
+[env]
+  NODE_ENV = "production"
+  PUERTO = "8080"
+  RUTA_BD = "/datos/oficina.sqlite"
+  AUTH_PERMITIR_DEMO = "false"
+  MCP_PERMITIR_STDIO = "false"
+
+[mounts]
+  source = "datos"
+  destination = "/datos"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+  # Una sola máquina: ver la nota de arriba sobre SQLite.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/salud"
+  timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

@@ -366,3 +366,32 @@ test('cada usuario tiene su propio hilo con el mismo personaje', async () => {
   // nunca de la URL.
   assert.equal(mio.datos.conversacion.personaje_id, personajeId);
 });
+
+/**
+ * La compresión y el streaming se llevan mal: gzip acumula en su búfer y la
+ * respuesta llegaría a golpes en vez de palabra a palabra. El middleware deja
+ * fuera `text/event-stream` a propósito, y esto lo vigila.
+ */
+test('la respuesta del chat no viaja comprimida', async () => {
+  proveedor.programar({ tipo: 'ok', texto: ['Uno ', 'dos ', 'tres.'] });
+
+  const respuesta = await fetch(`${BASE}/api/personajes/${personajeId}/mensajes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Peticion-Oficina': '1',
+      // Pidiendo gzip explícitamente: sin el filtro, el servidor lo concedería.
+      'Accept-Encoding': 'gzip, deflate',
+      Cookie: galleta,
+    },
+    body: JSON.stringify({ texto: 'Cuenta hasta tres' }),
+  });
+
+  assert.equal(respuesta.headers.get('content-encoding'), null);
+  assert.match(respuesta.headers.get('content-type'), /text\/event-stream/);
+
+  // Y los assets sí se comprimen: es lo que hace que valga la pena tenerlo.
+  await respuesta.text();
+  const modulo = await fetch(`${BASE}/js/principal.js`, { headers: { 'Accept-Encoding': 'gzip' } });
+  assert.equal(modulo.headers.get('content-encoding'), 'gzip');
+});

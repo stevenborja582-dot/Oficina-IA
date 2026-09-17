@@ -222,6 +222,7 @@
   outline: none;
 }
 .compositor__campo::placeholder { color: var(--tinta-3); }
+@media (max-width: 719px) { .compositor__campo { min-height: 44px; } }
 .compositor__campo:disabled { cursor: not-allowed; }
 
 .compositor__enviar { flex: none; }
@@ -354,6 +355,8 @@
   .chat-cabecera .encabezado__acciones .boton { padding-inline: var(--e3); }
   /* Solo el icono: la acción se entiende y se gana media pantalla. */
   .chat-cabecera .encabezado__acciones .boton__texto { display: none; }
+  /* Sin texto, el botón se queda en 42 px de ancho: el icono no basta. */
+  .chat-cabecera .encabezado__acciones .boton { min-width: 44px; padding-inline: var(--e3); }
   .chat-cabecera .encabezado__acciones .boton--acento .boton__texto { display: inline; }
 }
 

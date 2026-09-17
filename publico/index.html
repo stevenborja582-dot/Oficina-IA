@@ -19,6 +19,25 @@
   <link rel="stylesheet" href="/css/oficina.css">
   <link rel="stylesheet" href="/css/chat.css">
   <script type="module" src="/js/principal.js"></script>
+  <!-- El grafo de módulos tiene cinco niveles: sin esto el navegador los
+       descubre de uno en uno y encadena cinco vueltas de red antes de arrancar. -->
+  <link rel="modulepreload" href="/js/api.js">
+  <link rel="modulepreload" href="/js/color.js">
+  <link rel="modulepreload" href="/js/conectores-de-personaje.js">
+  <link rel="modulepreload" href="/js/dom.js">
+  <link rel="modulepreload" href="/js/iconos.js">
+  <link rel="modulepreload" href="/js/markdown.js">
+  <link rel="modulepreload" href="/js/modal-personaje.js">
+  <link rel="modulepreload" href="/js/modal-sala.js">
+  <link rel="modulepreload" href="/js/modal.js">
+  <link rel="modulepreload" href="/js/notificaciones.js">
+  <link rel="modulepreload" href="/js/piezas.js">
+  <link rel="modulepreload" href="/js/tema.js">
+  <link rel="modulepreload" href="/js/vista-chat.js">
+  <link rel="modulepreload" href="/js/vista-conectores.js">
+  <link rel="modulepreload" href="/js/vista-equipo.js">
+  <link rel="modulepreload" href="/js/vista-plano.js">
+  <link rel="modulepreload" href="/js/vista-sala.js">
 </head>
 <body>
   <a class="salto-contenido" href="#contenido">Saltar al contenido</a>

@@ -12,6 +12,7 @@ import { vistaPlano } from './vista-plano.js';
 import { vistaSala } from './vista-sala.js';
 import { vistaChat } from './vista-chat.js';
 import { vistaConectores } from './vista-conectores.js';
+import { vistaEquipo } from './vista-equipo.js';
 import { modalPersonaje } from './modal-personaje.js';
 import { modalSala } from './modal-sala.js';
 import { avatar } from './piezas.js';
@@ -99,16 +100,18 @@ const acciones = {
 const NAVEGACION = [
   { vista: 'plano', hash: '#/', texto: 'Plano', icono: 'oficina' },
   { vista: 'conectores', hash: '#/conectores', texto: 'Conectores', icono: 'enchufe' },
+  { vista: 'equipo', hash: '#/equipo', texto: 'Equipo', icono: 'usuarios', soloAdmin: true },
 ];
 
 /** La navegación se repinta en cada cambio de ruta para marcar la pestaña viva. */
 function pintarNavegacion() {
   const { vista } = rutaActual();
-  const activa = vista === 'conectores' ? 'conectores' : 'plano';
+  // Las rutas de dentro de una sala o de un chat siguen colgando del plano.
+  const activa = ['conectores', 'equipo'].includes(vista) ? vista : 'plano';
 
   reemplazar(
     zonaNavegacion,
-    ...NAVEGACION.map((entrada) =>
+    ...NAVEGACION.filter((entrada) => !entrada.soloAdmin || estado.permisos.administrarEquipo).map((entrada) =>
       elemento('a.nav-principal__enlace', {
         href: entrada.hash,
         'aria-current': entrada.vista === activa ? 'page' : null,
@@ -160,6 +163,13 @@ function rutaActual() {
   return { vista: vista || 'plano', parametro };
 }
 
+const sinPermiso = (texto) =>
+  elemento('div.error-vista', {}, [
+    elemento('h1', { texto: 'Esta parte no es tuya' }),
+    elemento('p', { texto }),
+    elemento('a.boton', { href: '#/', texto: 'Volver al plano' }),
+  ]);
+
 /** Avisa a la vista saliente para que corte lo que tenga en vuelo (una respuesta a medias). */
 function despedirVista() {
   contenido.firstElementChild?.dispatchEvent(new CustomEvent('oficina:salir'));
@@ -193,6 +203,17 @@ function pintarVista() {
   if (vista === 'conectores') {
     reemplazar(contenido, vistaConectores(estado, recargar));
     document.title = 'Conectores · Oficina Black Hole';
+    return;
+  }
+
+  if (vista === 'equipo') {
+    if (!estado.permisos.administrarEquipo) {
+      reemplazar(contenido, sinPermiso('El equipo lo gestionan los administradores.'));
+      document.title = 'Sin permiso · Oficina Black Hole';
+      return;
+    }
+    reemplazar(contenido, vistaEquipo(estado));
+    document.title = 'Equipo · Oficina Black Hole';
     return;
   }
 

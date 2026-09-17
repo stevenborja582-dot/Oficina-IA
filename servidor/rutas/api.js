@@ -11,16 +11,26 @@ import { rutasSalas } from './salas.js';
 import { rutasPersonajes } from './personajes.js';
 import { rutasChat } from './chat.js';
 import { rutasConectores, rutasConectoresDePersonaje } from './conectores.js';
+import { rutasEquipo } from './equipo.js';
 
 export const rutasApi = Router();
 
 rutasApi.use(requiereSesion);
 
+/**
+ * Qué puede tocar quien pregunta. Hoy las dos salen del mismo rol, pero son
+ * permisos distintos: repartir escritorios no es lo mismo que repartir llaves.
+ */
+const permisosDe = (usuario) => ({
+  administrarSalas: usuario.rol === 'admin',
+  administrarEquipo: usuario.rol === 'admin',
+});
+
 /** Quién soy y qué puedo hacer. */
 rutasApi.get('/yo', (peticion, respuesta) => {
   respuesta.json({
     usuario: usuarioPublico(peticion.user),
-    permisos: { administrarSalas: peticion.user.rol === 'admin' },
+    permisos: permisosDe(peticion.user),
   });
 });
 
@@ -32,7 +42,7 @@ rutasApi.get('/oficina', (peticion, respuesta) => {
   const listaSalas = salas.listar();
   respuesta.json({
     usuario: usuarioPublico(peticion.user),
-    permisos: { administrarSalas: peticion.user.rol === 'admin' },
+    permisos: permisosDe(peticion.user),
     salas: listaSalas,
     personajes: personajes.listar().map(conEstadoChat),
     plano: {
@@ -57,3 +67,4 @@ rutasApi.use('/personajes', rutasPersonajes);
 rutasApi.use('/personajes', rutasChat);
 rutasApi.use('/personajes', rutasConectoresDePersonaje);
 rutasApi.use('/conectores', rutasConectores);
+rutasApi.use('/equipo', rutasEquipo);

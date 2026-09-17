@@ -36,6 +36,9 @@
   display: flex;
   align-items: center;
   gap: var(--e3);
+  /* Sin esto, al esconder el texto en móvil el enlace se queda en 28 px. */
+  min-height: 44px;
+  min-width: 44px;
   color: var(--tinta);
   text-decoration: none;
   border-radius: var(--radio-2);
@@ -284,7 +287,19 @@
   font-size: var(--t-micro);
   color: var(--tinta-3);
 }
-.migas a { color: var(--tinta-2); text-decoration: none; border-radius: var(--radio-1); }
+.migas a {
+  display: inline-flex;
+  align-items: center;
+  /* La ruta es navegación, no adorno: se pulsa con el pulgar como todo lo demás. */
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+  padding-inline: var(--e1);
+  margin-inline: calc(var(--e1) * -1);
+  color: var(--tinta-2);
+  text-decoration: none;
+  border-radius: var(--radio-1);
+}
 .migas a:hover { color: var(--tinta); text-decoration: underline; }
 .migas svg { width: 14px; height: 14px; }
 
@@ -490,4 +505,53 @@
 @media (max-width: 719px) {
   .asignacion__herramientas { padding-left: var(--e3); }
   .asignacion__herramienta { min-height: 44px; }
+}
+
+/* ── Equipo (Fase 5) ─────────────────────────────────────────────────────── */
+
+.equipo { display: flex; flex-direction: column; gap: var(--e3); }
+.equipo__seccion { margin-top: var(--e7); display: flex; flex-direction: column; gap: var(--e3); }
+.equipo__titulo-seccion {
+  font-size: var(--t-ui); font-weight: 600; color: var(--tinta-2);
+  letter-spacing: -0.01em;
+}
+
+.equipo__persona,
+.equipo__invitacion {
+  display: flex; align-items: center; gap: var(--e4);
+  padding: var(--e4) var(--e5);
+}
+.equipo__persona--suspendida { background: var(--superficie-2); }
+.equipo__persona--suspendida .equipo__nombre,
+.equipo__persona--suspendida .equipo__correo { color: var(--tinta-3); }
+
+.equipo__quien { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.equipo__nombre {
+  display: flex; align-items: center; gap: var(--e2);
+  font-size: var(--t-cuerpo); font-weight: 580; letter-spacing: -0.01em;
+}
+.equipo__correo {
+  font-size: var(--t-micro); color: var(--tinta-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.equipo__meta {
+  display: flex; flex-wrap: wrap; gap: var(--e2);
+  font-size: var(--t-nano); color: var(--tinta-3);
+}
+
+.equipo__mandos { display: flex; align-items: center; gap: var(--e2); flex: none; }
+.equipo__rol { min-height: 36px; padding-block: 0; font-size: var(--t-micro); width: auto; }
+.equipo__sobre {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: none;
+  border-radius: var(--radio-2); background: var(--superficie-2); color: var(--tinta-3);
+}
+.equipo__sobre svg { width: 20px; height: 20px; }
+
+@media (max-width: 719px) {
+  /* En vertical la fila se apila: los mandos pasan a una línea propia y
+     recuperan sus 44 px de alto sin apretar contra el nombre. */
+  .equipo__persona, .equipo__invitacion { flex-wrap: wrap; gap: var(--e3); }
+  .equipo__quien { flex-basis: calc(100% - 44px - var(--e3)); }
+  .equipo__mandos { flex-basis: 100%; justify-content: flex-end; }
+  .equipo__rol { min-height: 44px; flex: 1; }
 }
