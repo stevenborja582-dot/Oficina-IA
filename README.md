@@ -18,8 +18,12 @@ persona, su modelo y su historial.
 ## 0. Verla sin instalar nada
 
 `demo/oficina.html` es la oficina entera en un solo archivo: ábrelo con doble clic y
-ahí está el plano, las salas, los personajes y el chat. No necesita servidor, ni
-`npm install`, ni `.env`, ni credenciales de Google.
+ahí está la **oficina isométrica en 3D** —salas con muros, ventanas y un personaje
+de pie en cada puesto—, además del plano 2D, la lista, las fichas y el chat. No
+necesita servidor, ni `npm install`, ni `.env`, ni credenciales de Google.
+
+El 3D va en CSS puro, sin librería: cada sala y cada personaje siguen siendo botones
+de verdad, así que se recorren con el tabulador y los lee un lector de pantalla.
 
 Es una **versión autónoma**, no la app: guarda en el navegador (o en el almacén del
 artefacto, si la abres publicada) en vez de en SQLite, y para que los personajes

@@ -252,8 +252,6 @@ select.control { appearance: none; padding-right: var(--e8);
 .sala-fila__nom { font-size: var(--t-cuerpo); font-weight: 600; }
 .sala-fila__desc { font-size: var(--t-micro); color: var(--tinta-3); }
 .sala-fila__flecha { align-self: center; color: var(--tinta-3); }
-.solo-plano { display: none; }
-@media (min-width: 780px) { .solo-plano { display: block; } .solo-lista { display: none; } }
 
 /* ── Chips y avatares ─────────────────────────────────────────────────── */
 .chip {
@@ -452,6 +450,167 @@ dialog.modal[open] { display: flex; flex-direction: column; animation: entra .3s
   background: linear-gradient(90deg, var(--superficie-2) 25%, var(--superficie-3) 37%, var(--superficie-2) 63%);
   background-size: 400% 100%; animation: brillo 1.4s ease-in-out infinite; }
 @keyframes brillo { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+/* ── Oficina isométrica: dollhouse en CSS 3D, sin librería ───────────────
+   Cada sala y cada personaje siguen siendo botones de verdad: se tabula, se
+   activa con Enter y un lector de pantalla los lee. */
+:root {
+  --suelo-base:  #e9e4db;
+  --muro-cara:   #f7f4ef;
+  --muro-canto:  #e4ded3;
+  --zocalo:      #d8d1c5;
+  --luz-alta:    rgba(255, 255, 255, .55);
+  --luz-baja:    rgba(28, 25, 21, .10);
+  --sombra-piso: rgba(28, 25, 21, .16);
+  --cielo:       radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #f4f1ea 45%, #e9e4db 100%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --suelo-base:  #221d18; --muro-cara: #3a322a; --muro-canto: #2b241e; --zocalo: #191411;
+    --luz-alta: rgba(255, 238, 214, .16); --luz-baja: rgba(0, 0, 0, .42);
+    --sombra-piso: rgba(0, 0, 0, .5);
+    --cielo: radial-gradient(120% 90% at 50% 0%, #241f1a 0%, #16120f 55%, #0c0a08 100%);
+  }
+}
+:root[data-theme="dark"] {
+  --suelo-base:  #221d18; --muro-cara: #3a322a; --muro-canto: #2b241e; --zocalo: #191411;
+  --luz-alta: rgba(255, 238, 214, .16); --luz-baja: rgba(0, 0, 0, .42);
+  --sombra-piso: rgba(0, 0, 0, .5);
+  --cielo: radial-gradient(120% 90% at 50% 0%, #241f1a 0%, #16120f 55%, #0c0a08 100%);
+}
+
+.escenario {
+  position: relative; height: clamp(380px, 56vh, 600px);
+  border: 1px solid var(--linea); border-radius: var(--r4);
+  background: var(--cielo); overflow: hidden;
+  perspective: 1900px; perspective-origin: 50% 50%;
+  touch-action: pan-y; cursor: grab; user-select: none;
+}
+.escenario.agarrando { cursor: grabbing; }
+.escenario:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.mundo {
+  position: absolute; left: 50%; top: 50%; width: 0; height: 0;
+  transform-style: preserve-3d;
+  transform: scale3d(var(--s), var(--s), var(--s)) translateZ(var(--zoom))
+             rotateX(var(--ax)) rotateY(var(--ay));
+  transition: transform .55s var(--curva);
+}
+.escenario.agarrando .mundo { transition: none; }
+
+/* El decorado no intercepta clics: si lo hiciera, el suelo de la sala le
+   robaría el clic a quien está de pie encima. */
+.cara { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; pointer-events: none; }
+.grupo { position: absolute; left: 0; top: 0; width: 0; height: 0;
+  transform-style: preserve-3d; transition: transform .25s var(--curva); }
+
+/* Rótulos y figuras miran siempre a cámara, así que no necesitan estar dentro
+   del mundo 3D: viven en una capa plana con su posición proyectada. Además de
+   ser más barato, resuelve el orden de pintado, que en CSS 3D va por elemento
+   y no por píxel. */
+.capa2d { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.capa2d > * { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%);
+  pointer-events: auto; border: 0; font: inherit; color: inherit; }
+.capa2d > .centrado { transform: translate(-50%, -50%); }
+.capa2d > .apagada { opacity: .16; pointer-events: none; }
+
+.solar { background: var(--suelo-base); border-radius: 4px; box-shadow: 0 0 0 1px var(--luz-baja) inset; }
+.solar::after {
+  content: ''; position: absolute; inset: 0; border-radius: 4px;
+  background-image: linear-gradient(var(--luz-baja) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--luz-baja) 1px, transparent 1px);
+  background-size: 28px 28px; opacity: .5;
+}
+.pasillo3d { background: color-mix(in srgb, var(--acento) 9%, var(--suelo-base)); border-radius: 3px; }
+.pasillo3d::after {
+  content: ''; position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; translate: 0 -50%;
+  background: repeating-linear-gradient(90deg, var(--luz-baja) 0 14px, transparent 14px 26px);
+}
+
+.sala3d--activa { transform: translate3d(0, -7px, 0); }
+.sala3d--enfocada .suelo3d { box-shadow: 0 0 0 3px var(--acento) inset; }
+.sala3d--apagada .cara { opacity: .16; }
+
+.suelo3d { background: color-mix(in srgb, var(--color) 12%, var(--suelo-base));
+  box-shadow: 0 0 0 1px var(--luz-baja) inset; }
+.suelo3d::after { content: ''; position: absolute; inset: 14%; border-radius: 6px;
+  background: color-mix(in srgb, var(--color) 20%, transparent); opacity: .35; }
+.zocalo3d { background: var(--zocalo); }
+.zocalo3d--frente { background: linear-gradient(var(--luz-baja), var(--luz-baja)), var(--zocalo); }
+
+.muro3d { background: linear-gradient(to bottom, var(--luz-alta), transparent 62%), var(--muro-cara);
+  box-shadow: inset 0 -1px 0 var(--luz-baja); }
+.muro3d--lateral { background: linear-gradient(to bottom, var(--luz-alta), transparent 62%),
+  linear-gradient(var(--luz-baja), var(--luz-baja)), var(--muro-cara); }
+.ventana3d {
+  position: absolute; top: 24%; height: 42%; border-radius: 2px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color) 40%, #dff0ff) 0%,
+    color-mix(in srgb, var(--color) 18%, #9fc7e8) 100%);
+  box-shadow: 0 0 0 2px var(--muro-canto), 0 0 14px color-mix(in srgb, var(--color) 40%, transparent);
+}
+.puerta3d { position: absolute; bottom: 0; width: 34px; height: 74%; border-radius: 3px 3px 0 0;
+  background: linear-gradient(var(--luz-baja), transparent), var(--muro-canto);
+  box-shadow: inset 0 0 0 1px var(--luz-baja); }
+
+.mesa3d { background: color-mix(in srgb, var(--color) 34%, var(--muro-cara)); border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--luz-baja); }
+.mesa3d--canto { background: color-mix(in srgb, var(--color) 16%, var(--muro-canto)); }
+.pantalla3d { border-radius: 2px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--color) 55%, #cfe6ff),
+    color-mix(in srgb, var(--color) 30%, #7fa8c9));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color) 45%, transparent); }
+.sombra3d { background: radial-gradient(closest-side, var(--sombra-piso), transparent 72%); }
+
+.figura { display: grid; justify-items: center; gap: 2px; background: none; padding: 0; cursor: pointer; }
+.figura__cabeza { width: 11px; height: 11px; border-radius: 50%;
+  background: color-mix(in srgb, var(--tono) 82%, #fff); box-shadow: 0 1px 0 var(--luz-baja); }
+.figura__cuerpo { width: 17px; height: 21px; border-radius: 9px 9px 4px 4px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color) 88%, #fff), var(--color));
+  box-shadow: 0 2px 6px -2px var(--sombra-piso); transition: transform .18s var(--curva); }
+.figura__rango { width: 6px; height: 6px; border-radius: 50%; margin-top: -3px; border: 1px solid var(--muro-cara); }
+.figura__rango--secretario { background: #f0a35c; }
+.figura__rango--manager { background: #7ba6ff; }
+.figura__rango--especialista { background: transparent; border-color: transparent; }
+.figura__nombre { margin-top: 2px; padding: 2px 7px; border-radius: var(--rp);
+  border: 1px solid var(--linea); background: var(--superficie); color: var(--tinta);
+  font-size: 9.5px; font-weight: 600; white-space: nowrap; box-shadow: var(--sombra-1); }
+.figura:hover .figura__nombre, .figura:focus-visible .figura__nombre { border-color: var(--color); color: var(--tono); }
+.figura:hover .figura__cuerpo { transform: translateY(-2px); }
+
+.rotulo3d { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+  border-radius: var(--rp); border: 1px solid var(--linea); background: var(--superficie);
+  box-shadow: var(--sombra-2); cursor: pointer; white-space: nowrap; }
+.rotulo3d__punto { width: 7px; height: 7px; border-radius: 50%; background: var(--color); }
+.rotulo3d__nombre { font-size: 11.5px; font-weight: 620; letter-spacing: -.01em; color: var(--tinta); }
+.rotulo3d__conteo { font-family: var(--mono); font-size: 9.5px; color: var(--tinta-3); }
+.rotulo3d:hover, .rotulo3d:focus-visible { border-color: var(--color); }
+
+.recepcion3d { padding: 4px 10px; border-radius: var(--rp); border: 1px dashed var(--linea-fuerte);
+  background: color-mix(in srgb, var(--superficie) 70%, transparent);
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--tinta-3); white-space: nowrap; }
+.planta3d__hojas { display: block; width: 16px; height: 16px; border-radius: 50% 50% 40% 40%;
+  background: linear-gradient(to bottom, #4ec08f, #2f8f6a); }
+.planta3d__maceta { display: block; width: 11px; height: 8px; margin: -2px auto 0;
+  border-radius: 2px 2px 4px 4px; background: color-mix(in srgb, var(--acento) 55%, var(--zocalo)); }
+
+.mandos3d { position: absolute; right: var(--e3); bottom: var(--e3); display: flex; gap: var(--e1);
+  padding: var(--e1); border: 1px solid var(--linea); border-radius: var(--rp);
+  background: color-mix(in srgb, var(--superficie) 88%, transparent);
+  backdrop-filter: blur(8px); box-shadow: var(--sombra-1); }
+.mandos3d button { display: grid; place-items: center; width: 34px; height: 34px; border: 0;
+  border-radius: 50%; background: none; color: var(--tinta-2); cursor: pointer; font-size: 15px; line-height: 1; }
+.mandos3d button:hover { background: var(--superficie-2); color: var(--tinta); }
+.pista3d { position: absolute; left: var(--e4); bottom: var(--e4);
+  font-size: var(--t-nano); color: var(--tinta-3); pointer-events: none; }
+
+.modos { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--linea-fuerte);
+  border-radius: var(--rp); background: var(--superficie-2); }
+.modos button { min-height: 32px; padding: 0 var(--e3); border: 0; border-radius: var(--rp);
+  background: none; color: var(--tinta-2); font-size: var(--t-micro); font-weight: 560; cursor: pointer; }
+.modos button[aria-pressed="true"] { background: var(--superficie); color: var(--tinta); box-shadow: var(--sombra-1); }
+@media (max-width: 719px) { .modos button { min-height: 38px; } }
+@media (prefers-reduced-motion: reduce) { .mundo { transition: none; } }
+
 </style>
 
 <header class="cabecera">
@@ -548,6 +707,7 @@ function aplicar(n, attrs, esSvg) {
     if (v === null || v === undefined || v === false) continue;
     if (k === 'texto') n.textContent = String(v);
     else if (k === 'vars') for (const [p, val] of Object.entries(v)) n.style.setProperty(p, String(val));
+    else if (k === 'datos') for (const [d, val] of Object.entries(v)) n.dataset[d] = String(val);
     else if (/^on[A-Z]/.test(k)) n.addEventListener(k.slice(2).toLowerCase(), v);
     else if (!esSvg && k in n && typeof v !== 'object') { try { n[k] = v; } catch { n.setAttribute(k, String(v)); } }
     else n.setAttribute(k, String(v));
@@ -638,13 +798,16 @@ const SALAS_INICIALES = [
   ['general', 'General', 'Todo lo que aún no tiene sala propia.', '#57534E', 'oficina'],
 ];
 const PERSONAJES_EJEMPLO = [
-  ['desarrollo', 'Nova', 'Arquitecta', 'Eres Nova, arquitecta de software. Respondes en español, con criterio y sin rodeos. Prefieres una decisión clara con sus contras a una lista de opciones.'],
-  ['desarrollo', 'Tipo', 'Revisor de código', 'Eres Tipo, revisor de código. Señalas el fallo concreto y propones el arreglo. Nada de elogios de relleno.'],
-  ['diseno', 'Mimo', 'Directora de arte', 'Eres Mimo, directora de arte. Hablas de jerarquía, contraste y ritmo. Justificas cada decisión visual.'],
-  ['contenido', 'Pluma', 'Redactora jefa', 'Eres Pluma. Escribes en español neutro, claro y sin relleno. Prefieres frases cortas y verbos activos.'],
-  ['automatizacion', 'Axiom', 'Orquestador', 'Eres Axiom. Conviertes procesos manuales en pasos automatizables y dices qué puede fallar en cada uno.'],
-  ['asistencia', 'Pingüino', 'Asistente de escritorio', 'Eres Pingüino, asistente de escritorio. Breve, práctico y un punto seco.'],
+  ['desarrollo', 'Nova', 'Arquitecta', 'manager', 'Eres Nova, arquitecta de software y manager del departamento. Repartes el trabajo y respondes en español, con criterio y sin rodeos. Prefieres una decisión clara con sus contras a una lista de opciones.'],
+  ['desarrollo', 'Tipo', 'Revisor de código', 'especialista', 'Eres Tipo, revisor de código. Señalas el fallo concreto y propones el arreglo. Nada de elogios de relleno.'],
+  ['diseno', 'Mimo', 'Directora de arte', 'manager', 'Eres Mimo, directora de arte. Hablas de jerarquía, contraste y ritmo. Justificas cada decisión visual.'],
+  ['contenido', 'Pluma', 'Redactora jefa', 'especialista', 'Eres Pluma. Escribes en español neutro, claro y sin relleno. Prefieres frases cortas y verbos activos.'],
+  ['automatizacion', 'Axiom', 'Orquestador', 'especialista', 'Eres Axiom. Conviertes procesos manuales en pasos automatizables y dices qué puede fallar en cada uno.'],
+  ['asistencia', 'Pingüino', 'Recepción', 'secretario', 'Eres Pingüino y llevas la recepción de la oficina. Recibes los encargos, preguntas lo justo para entenderlos y dices a qué departamento irían. Breve, práctico y un punto seco.'],
 ];
+
+/** Jerarquía de la oficina: quien recibe, quien reparte y quien ejecuta. */
+const RANGOS = { secretario: 'Recepción', manager: 'Manager', especialista: 'Especialista' };
 
 const PALETA = [
   ['#2563EB', 'Azul — Desarrollo'], ['#7C3AED', 'Violeta — Diseño'], ['#059669', 'Verde — Asistencia'],
@@ -657,10 +820,10 @@ function oficinaInicial() {
   const salas = SALAS_INICIALES.map(([slug, nombre, desc, color, ic], i) => ({
     id: 's' + (i + 1), slug, nombre, descripcion: desc, color, icono: ic, ...casilla(i),
   }));
-  const personajes = PERSONAJES_EJEMPLO.map(([slug, nombre, rol, persona], i) => ({
+  const personajes = PERSONAJES_EJEMPLO.map(([slug, nombre, rol, rango, persona], i) => ({
     id: 'p' + (i + 1),
     salaId: salas.find((s) => s.slug === slug).id,
-    nombre, rol, persona, estado: 'activo', enlace: '', ejemplo: true,
+    nombre, rol, rango, persona, estado: 'activo', enlace: '', ejemplo: true,
   }));
   return { salas, personajes, siguiente: personajes.length + 1, siguienteSala: salas.length + 1 };
 }
@@ -894,8 +1057,362 @@ function marcarError(dialogo, nombre, mensaje) {
   return true;
 }
 
+/* ── Oficina isométrica (dollhouse en CSS 3D) ────────────────────────────
+   La planta sale de los mismos datos que el plano 2D: una sola fuente de
+   verdad para las dos vistas; lo que cambia es la proyección.
+
+   El mundo 3D lleva solo la arquitectura — suelos, muros, mesas. Todo lo que
+   mira a cámara (rótulos, figuras, plantas) vive en una capa plana encima,
+   con la posición proyectada a mano. Es más barato que contrarrotar cada
+   elemento y, sobre todo, esquiva el orden de pintado de CSS 3D, que ordena
+   por elemento y no por píxel: dentro del mundo, el suelo de una sala acaba
+   tapando a quien está de pie sobre él.
+   ──────────────────────────────────────────────────────────────────────── */
+const ISO = { escala: 0.62, losa: 10, muro: 46, mesaAlto: 13, perspectiva: 1900 };
+const vista3d = { ax: -56, ay: -42, zoom: -30, s: 1 };
+
+/** Una cara plana del decorado, centrada en su punto de anclaje. */
+function cara(clases, w, h, transform) {
+  const n = el('div.cara.' + clases);
+  n.style.width = w + 'px';
+  n.style.height = h + 'px';
+  n.style.marginLeft = (-w / 2) + 'px';
+  n.style.marginTop = (-h / 2) + 'px';
+  n.style.transform = transform;
+  return n;
+}
+
+/**
+ * Proyecta un punto del mundo a la pantalla replicando la transformación CSS
+ * de `.mundo`: rotateY, luego rotateX, luego el zoom, la escala y la perspectiva.
+ */
+function proyectar(x, y, z) {
+  const ax = (vista3d.ax * Math.PI) / 180;
+  const ay = (vista3d.ay * Math.PI) / 180;
+
+  const x1 = x * Math.cos(ay) + z * Math.sin(ay);
+  const z1 = -x * Math.sin(ay) + z * Math.cos(ay);
+  const y2 = y * Math.cos(ax) - z1 * Math.sin(ax);
+  const z2 = y * Math.sin(ax) + z1 * Math.cos(ax);
+
+  const s = vista3d.s;
+  const zf = (z2 + vista3d.zoom) * s;
+  const k = ISO.perspectiva / Math.max(1, ISO.perspectiva - zf);
+  return { x: x1 * s * k, y: y2 * s * k, z: zf };
+}
+
+function figuraDe(personaje, sala) {
+  const rango = personaje.rango || 'especialista';
+  return el('button.figura', {
+    type: 'button',
+    datos: { sala: sala.id },
+    vars: varsSala(sala.color),
+    'aria-label': 'Chatear con ' + personaje.nombre + ', ' + (personaje.rol || RANGOS[rango]) + ', en ' + sala.nombre,
+    onClick: () => irAChat(personaje.id),
+  }, [
+    el('span.figura__cabeza', { 'aria-hidden': 'true' }),
+    el('span.figura__cuerpo', { 'aria-hidden': 'true' }),
+    el('span.figura__rango.figura__rango--' + rango, { 'aria-hidden': 'true' }),
+    el('span.figura__nombre', { texto: personaje.nombre }),
+  ]);
+}
+
+function construirEscena3D() {
+  const E = ISO.escala;
+  const T = ISO.losa;
+  const HM = ISO.muro;
+  const altoPlano = altoLienzo(oficina.salas);
+  const px = (x) => (x - PLANO.ancho / 2) * E;
+  const pz = (y) => (y - altoPlano / 2) * E;
+
+  const mundo = el('div.mundo');
+  const capa = el('div.capa2d');
+  const anclas = [];
+
+  const anclar = (nodo, x, y, z) => {
+    capa.append(nodo);
+    anclas.push({ nodo, x, y, z });
+    return nodo;
+  };
+
+  mundo.append(cara('solar', PLANO.ancho * E + 40, altoPlano * E + 40, 'translate3d(0px,0px,0px) rotateX(90deg)'));
+  const pas = rectPasillo();
+  const zPasillo = pz(pas.y + pas.alto / 2);
+  mundo.append(cara('pasillo3d', pas.ancho * E, pas.alto * E,
+    'translate3d(0px,-1px,' + zPasillo + 'px) rotateX(90deg)'));
+  anclar(el('div.recepcion3d.centrado', { texto: 'Recepción' }), 0, -10, zPasillo);
+
+  oficina.salas.forEach((sala) => {
+    const cx = px(sala.x + sala.ancho / 2);
+    const cz = pz(sala.y + sala.alto / 2);
+    const W = sala.ancho * E;
+    const D = sala.alto * E;
+    const personajes = enSala(sala.id);
+
+    const g = el('div.grupo.sala3d', { vars: varsSala(sala.color), datos: { sala: sala.id } });
+
+    // Losa: suelo arriba y tres cantos (el cuarto nunca se ve desde la cámara).
+    g.append(
+      cara('suelo3d', W, D, 'translate3d(' + cx + 'px,' + (-T) + 'px,' + cz + 'px) rotateX(90deg)'),
+      cara('zocalo3d.zocalo3d--frente', W, T, 'translate3d(' + cx + 'px,' + (-T / 2) + 'px,' + (cz + D / 2) + 'px)'),
+      cara('zocalo3d', D, T, 'translate3d(' + (cx + W / 2) + 'px,' + (-T / 2) + 'px,' + cz + 'px) rotateY(90deg)'),
+      cara('zocalo3d', D, T, 'translate3d(' + (cx - W / 2) + 'px,' + (-T / 2) + 'px,' + cz + 'px) rotateY(-90deg)'),
+    );
+
+    // Muros del fondo y de la izquierda: la casa de muñecas se abre a cámara.
+    const muroFondo = cara('muro3d', W, HM,
+      'translate3d(' + cx + 'px,' + (-(T + HM / 2)) + 'px,' + (cz - D / 2) + 'px)');
+    muroFondo.append(
+      el('span.ventana3d', { style: 'left:13%;width:21%' }),
+      el('span.ventana3d', { style: 'right:13%;width:21%' }),
+      el('span.puerta3d', { style: 'left:calc(50% - 17px)' }),
+    );
+    const muroIzq = cara('muro3d.muro3d--lateral', D, HM,
+      'translate3d(' + (cx - W / 2) + 'px,' + (-(T + HM / 2)) + 'px,' + cz + 'px) rotateY(90deg)');
+    muroIzq.append(el('span.ventana3d', { style: 'left:24%;width:34%' }));
+    g.append(muroFondo, muroIzq);
+
+    // Un puesto por personaje, en las mismas coordenadas que el plano 2D.
+    const MW = 69 * E, MD = 22 * E, MH = ISO.mesaAlto;
+    const figuras = [];
+    personajes.slice(0, 8).forEach((p, i) => {
+      const dx = px(sala.x + 20 + (i % 4) * 81 + 34.5);
+      const dz = pz(sala.y + 110 + Math.floor(i / 4) * 40 + 11);
+      g.append(
+        cara('mesa3d', MW, MD, 'translate3d(' + dx + 'px,' + (-(T + MH)) + 'px,' + dz + 'px) rotateX(90deg)'),
+        cara('mesa3d.mesa3d--canto', MW, MH, 'translate3d(' + dx + 'px,' + (-(T + MH / 2)) + 'px,' + (dz + MD / 2) + 'px)'),
+        cara('mesa3d.mesa3d--canto', MD, MH, 'translate3d(' + (dx + MW / 2) + 'px,' + (-(T + MH / 2)) + 'px,' + dz + 'px) rotateY(90deg)'),
+        cara('pantalla3d', 17, 12, 'translate3d(' + dx + 'px,' + (-(T + MH + 6)) + 'px,' + (dz - MD / 2 + 3) + 'px) rotateX(-14deg)'),
+        cara('sombra3d', 26, 14, 'translate3d(' + dx + 'px,' + (-(T + 2)) + 'px,' + (dz + MD / 2 + 11) + 'px) rotateX(90deg)'),
+      );
+      figuras.push(anclar(figuraDe(p, sala), dx, -T, dz + MD / 2 + 11));
+    });
+
+    if (personajes.length > 8) {
+      anclar(el('div.recepcion3d.centrado', { datos: { sala: sala.id }, texto: '+' + (personajes.length - 8) + ' más' }),
+        cx, -(T + 16), cz + D / 2 - 14);
+    }
+
+    // Una planta en la esquina libre, para que la sala no parezca un almacén.
+    anclar(el('div.planta3d', { datos: { sala: sala.id }, 'aria-hidden': 'true' }, [
+      el('span.planta3d__hojas'), el('span.planta3d__maceta'),
+    ]), cx - W / 2 + 22, -T, cz - D / 2 + 22);
+
+    // Rótulo de la sala: el punto de entrada por teclado.
+    const rotulo = el('button.rotulo3d.centrado', {
+      type: 'button',
+      datos: { sala: sala.id },
+      vars: varsSala(sala.color),
+      'aria-label': 'Entrar en ' + sala.nombre + '. ' + contar(personajes.length) + '.',
+      onClick: () => irASala(sala.id),
+    }, [
+      el('span.rotulo3d__punto', { 'aria-hidden': 'true' }),
+      el('span.rotulo3d__nombre', { texto: sala.nombre }),
+      el('span.rotulo3d__conteo', { texto: String(personajes.length) }),
+    ]);
+    // Encima del muro del fondo: así no se cruza con nadie sentado a su mesa.
+    anclar(rotulo, cx, -(T + HM + 30), cz - D / 2 + 8);
+
+    // La sala se levanta cuando el ratón o el foco entran en algo suyo.
+    [rotulo].concat(figuras).forEach((nodo) => {
+      nodo.addEventListener('pointerenter', () => g.classList.add('sala3d--activa'));
+      nodo.addEventListener('pointerleave', () => g.classList.remove('sala3d--activa'));
+      nodo.addEventListener('focus', () => g.classList.add('sala3d--activa', 'sala3d--enfocada'));
+      nodo.addEventListener('blur', () => g.classList.remove('sala3d--activa', 'sala3d--enfocada'));
+    });
+
+    mundo.append(g);
+  });
+
+  return { mundo, capa, anclas };
+}
+
+/** Recoloca la capa plana según la orientación actual del mundo. */
+function colocarAnclas(anclas) {
+  for (const ancla of anclas) {
+    const p = proyectar(ancla.x, ancla.y, ancla.z);
+    ancla.nodo.style.left = p.x.toFixed(1) + 'px';
+    ancla.nodo.style.top = p.y.toFixed(1) + 'px';
+    // Lo que está más cerca de la cámara se dibuja encima.
+    ancla.nodo.style.zIndex = String(Math.round(1000 + p.z));
+  }
+}
+
+/** Órbita: arrastrar gira, rueda y botones acercan. Acotada para no ver la
+    oficina por debajo ni por detrás de los muros. */
+function montarOrbita(escenario, escena) {
+  const aplicar = () => {
+    escenario.style.setProperty('--ax', vista3d.ax + 'deg');
+    escenario.style.setProperty('--ay', vista3d.ay + 'deg');
+    escenario.style.setProperty('--zoom', vista3d.zoom + 'px');
+    escenario.style.setProperty('--s', vista3d.s);
+    colocarAnclas(escena.anclas);
+  };
+  const acotar = () => {
+    vista3d.ax = Math.min(-24, Math.max(-76, vista3d.ax));
+    vista3d.ay = Math.min(-12, Math.max(-72, vista3d.ay));
+    vista3d.zoom = Math.min(320, Math.max(-420, vista3d.zoom));
+  };
+
+  const punteros = new Map();
+  let ultimo = null;
+  let distancia = 0;
+  let movido = 0;
+
+  // Nada de setPointerCapture: capturar el puntero redirige también el clic al
+  // escenario, y entonces ningún botón de la escena responde.
+  const mover = (e) => {
+    if (!punteros.has(e.pointerId)) return;
+    punteros.set(e.pointerId, e);
+
+    if (punteros.size >= 2) {
+      const [a, b] = [...punteros.values()];
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (distancia) { vista3d.zoom += (d - distancia) * 1.6; acotar(); aplicar(); }
+      distancia = d;
+      return;
+    }
+    if (!ultimo) return;
+    const dx = e.clientX - ultimo.x;
+    const dy = e.clientY - ultimo.y;
+    movido += Math.abs(dx) + Math.abs(dy);
+    vista3d.ay += dx * 0.28;
+    // Con el dedo, el eje vertical se lo queda la página para desplazarse.
+    if (e.pointerType !== 'touch') vista3d.ax -= dy * 0.22;
+    acotar();
+    aplicar();
+    ultimo = { x: e.clientX, y: e.clientY };
+  };
+
+  const soltar = (e) => {
+    punteros.delete(e.pointerId);
+    if (punteros.size < 2) distancia = 0;
+    if (punteros.size === 0) {
+      ultimo = null;
+      escenario.classList.remove('agarrando');
+      window.removeEventListener('pointermove', mover);
+      window.removeEventListener('pointerup', soltar);
+      window.removeEventListener('pointercancel', soltar);
+    }
+  };
+
+  escenario.addEventListener('pointerdown', (e) => {
+    punteros.set(e.pointerId, e);
+    escenario.classList.add('agarrando');
+    ultimo = { x: e.clientX, y: e.clientY };
+    movido = 0;
+    window.addEventListener('pointermove', mover);
+    window.addEventListener('pointerup', soltar);
+    window.addEventListener('pointercancel', soltar);
+  });
+
+  // Un arrastre no debe abrir lo que quedó debajo del dedo al soltar.
+  escenario.addEventListener('click', (e) => {
+    if (movido > 6) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  escenario.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    vista3d.zoom -= e.deltaY * 0.6;
+    acotar();
+    aplicar();
+  }, { passive: false });
+
+  escenario.addEventListener('keydown', (e) => {
+    const paso = e.shiftKey ? 10 : 4;
+    if (e.key === 'ArrowLeft') vista3d.ay -= paso;
+    else if (e.key === 'ArrowRight') vista3d.ay += paso;
+    else if (e.key === 'ArrowUp') vista3d.ax -= paso;
+    else if (e.key === 'ArrowDown') vista3d.ax += paso;
+    else if (e.key === '+' || e.key === '=') vista3d.zoom += 40;
+    else if (e.key === '-') vista3d.zoom -= 40;
+    else return;
+    e.preventDefault();
+    acotar();
+    aplicar();
+  });
+
+  // La escena se encoge para caber en el ancho disponible.
+  const medir = () => {
+    vista3d.s = Math.min(1, Math.max(0.42, (escenario.clientWidth - 40) / 900));
+    aplicar();
+  };
+  if (typeof ResizeObserver === 'function') new ResizeObserver(medir).observe(escenario);
+  medir();
+
+  return { aplicar, acotar, medir };
+}
+
+/* Rehacer doscientos elementos en cada tecla del buscador sería absurdo: la
+   escena se cachea y solo se reconstruye si cambian los datos o el tema. */
+let escenaCache = null;
+let escenaFirma = '';
+let escenaOrbita = null;
+
+function firmaOficina() {
+  return JSON.stringify([
+    oficina.salas.map((s) => [s.id, s.nombre, s.color, s.x, s.y, s.ancho, s.alto]),
+    oficina.personajes.map((p) => [p.id, p.salaId, p.nombre, p.rango, p.estado]),
+    esOscuro(),
+  ]);
+}
+
+function escenario3D() {
+  const firma = firmaOficina();
+  if (escenaCache && escenaFirma === firma) return escenaCache;
+
+  const escena = construirEscena3D();
+  const escenario = el('div.escenario', {
+    tabIndex: 0,
+    role: 'application',
+    'aria-label': 'Oficina en tres dimensiones. Arrastra o usa las flechas para girarla. ' +
+      'El rótulo de cada sala y cada personaje son botones.',
+  }, [escena.mundo, escena.capa]);
+
+  escenario.append(
+    el('p.pista3d', { texto: 'Arrastra para girar · pulsa el rótulo de una sala o a un personaje' }),
+    el('div.mandos3d', {}, [
+      el('button', { type: 'button', 'aria-label': 'Acercar', texto: '+',
+        onClick: () => { vista3d.zoom += 60; escenaOrbita.acotar(); escenaOrbita.aplicar(); } }),
+      el('button', { type: 'button', 'aria-label': 'Alejar', texto: '−',
+        onClick: () => { vista3d.zoom -= 60; escenaOrbita.acotar(); escenaOrbita.aplicar(); } }),
+      el('button', { type: 'button', 'aria-label': 'Recolocar la vista', texto: '⤾',
+        onClick: () => { vista3d.ax = -56; vista3d.ay = -42; vista3d.zoom = -30; escenaOrbita.aplicar(); } }),
+    ]),
+  );
+
+  escenaOrbita = montarOrbita(escenario, escena);
+  escenaCache = escenario;
+  escenaFirma = firma;
+  return escenario;
+}
+
 /* ── Vista: plano ────────────────────────────────────────────────────── */
 let consultaPlano = '';
+
+const MODOS = [['iso', 'Oficina 3D'], ['plano', 'Plano'], ['lista', 'Lista']];
+const soporta3D = () => typeof CSS !== 'undefined' && CSS.supports && CSS.supports('transform-style', 'preserve-3d');
+let modoPlano = (() => {
+  try { const m = localStorage.getItem(CLAVE + '.modo'); return MODOS.some(([v]) => v === m) ? m : 'iso'; }
+  catch { return 'iso'; }
+})();
+
+/** Las tres maneras de mirar la misma planta: en 3D, en plano o en lista. */
+function cuerpoDelPlano(consulta, filtradas) {
+  if (modoPlano === 'iso' && soporta3D()) {
+    const escenario = escenario3D();
+    // La escena está cacheada: el filtro se aplica encima, sin reconstruirla.
+    escenario.querySelectorAll('[data-sala]').forEach((nodo) => {
+      const fuera = Boolean(consulta) && !filtradas.has(nodo.dataset.sala);
+      nodo.classList.toggle(nodo.classList.contains('sala3d') ? 'sala3d--apagada' : 'apagada', fuera);
+    });
+    return escenario;
+  }
+  if (modoPlano === 'plano' || modoPlano === 'iso') {
+    return el('div.plano', {}, [lienzoPlano(filtradas)]);
+  }
+  return el('div.salas-lista', {}, oficina.salas.map((s) => filaSala(s, consulta && !filtradas.has(s.id))));
+}
 
 function salaEnPlano(sala, personajes, apagada) {
   const v = varsSala(sala.color);
@@ -1029,10 +1546,18 @@ function vistaPlano() {
     ]),
     el('div.barra', {}, [
       el('div.buscador', {}, [icono('buscar'), campoBusqueda]),
+      el('div.modos', { role: 'group', 'aria-label': 'Cómo ver la oficina' }, MODOS.map(([valor, texto]) =>
+        el('button', {
+          type: 'button', texto, 'aria-pressed': String(modoPlano === valor),
+          onClick: () => {
+            modoPlano = valor;
+            try { localStorage.setItem(CLAVE + '.modo', valor); } catch { /* modo privado */ }
+            pintar();
+          },
+        }))),
       conteo,
     ]),
-    el('div.plano.solo-plano', {}, [lienzoPlano(filtradas)]),
-    el('div.salas-lista.solo-lista', {}, oficina.salas.map((s) => filaSala(s, q && !filtradas.has(s.id)))),
+    cuerpoDelPlano(q, filtradas),
     encontrados.length > 0 && el('section', { style: 'margin-top:var(--e6)' }, [
       el('p.etiqueta', { texto: 'Personajes encontrados' }),
       el('div.personajes', { style: 'margin-top:var(--e3)' },
@@ -1057,6 +1582,7 @@ function tarjetaPersonaje(personaje, sala) {
         el('p.personaje__rol', { texto: personaje.rol || 'Sin rol asignado' }),
         el('div.personaje__chips', {}, [
           chip(sala.nombre, { color: sala.color, punto: true }),
+          chip(RANGOS[personaje.rango || 'especialista'], { neutro: true }),
           personaje.estado !== 'activo' && chip(ESTADOS[personaje.estado], { neutro: true }),
           personaje.ejemplo && chip('ejemplo', { neutro: true }),
         ]),
@@ -1284,7 +1810,15 @@ function vistaChat() {
     botonDetener.hidden = false;
 
     // La persona va como turno de usuario inicial: `sample` no tiene system prompt.
-    const instrucciones = (personaje.persona || 'Eres ' + personaje.nombre + ', ' + (personaje.rol || 'un compañero de oficina') + '.') +
+    const rango = personaje.rango || 'especialista';
+    const encargo = {
+      secretario: 'Llevas la recepción: recibes el encargo, preguntas solo lo que falte para entenderlo y dices a qué departamento iría.',
+      manager: 'Eres el manager del departamento: ordenas el trabajo en pasos, dices quién haría cada uno y qué puede salir mal.',
+      especialista: 'Eres el especialista: ejecutas la tarea concreta y entregas el resultado, no un plan.',
+    }[rango];
+    const instrucciones =
+      (personaje.persona || 'Eres ' + personaje.nombre + ', ' + (personaje.rol || 'un compañero de oficina') + '.') +
+      '\n\n' + encargo + '\nTrabajas en el departamento de ' + sala.nombre + '.' +
       '\n\nResponde siempre en español. Usa Markdown cuando ayude (listas, código), nunca HTML.';
     const turnos = [{ role: 'user', content: instrucciones },
       { role: 'assistant', content: 'Entendido. Soy ' + personaje.nombre + '.' }];
@@ -1338,7 +1872,10 @@ function vistaChat() {
           el('div', {}, [
             el('h1.encabezado__titulo', { texto: personaje.nombre }),
             el('p.encabezado__sub', { texto: personaje.rol || 'Sin rol asignado' }),
-            el('div.personaje__chips', {}, [chip(sala.nombre, { color: sala.color, punto: true })]),
+            el('div.personaje__chips', {}, [
+              chip(sala.nombre, { color: sala.color, punto: true }),
+              chip(RANGOS[personaje.rango || 'especialista'], { neutro: true }),
+            ]),
           ]),
         ]),
       ]),
@@ -1369,7 +1906,7 @@ function vistaChat() {
 function modalPersonaje(personaje, salaIdPorDefecto) {
   const esNuevo = !personaje;
   const base = personaje || { nombre: '', rol: '', persona: '', estado: 'activo', enlace: '',
-    salaId: salaIdPorDefecto || oficina.salas[0].id };
+    rango: 'especialista', salaId: salaIdPorDefecto || oficina.salas[0].id };
 
   const cNombre = el('input', { type: 'text', name: 'nombre', value: base.nombre, maxLength: 60, autocomplete: 'off' });
   const cRol = el('input', { type: 'text', name: 'rol', value: base.rol, maxLength: 80, autocomplete: 'off' });
@@ -1377,6 +1914,8 @@ function modalPersonaje(personaje, salaIdPorDefecto) {
     el('option', { value: s.id, texto: s.nombre, selected: s.id === base.salaId })));
   const cEstado = el('select', { name: 'estado' }, Object.entries(ESTADOS).map(([k, v]) =>
     el('option', { value: k, texto: v, selected: k === base.estado })));
+  const cRango = el('select', { name: 'rango' }, Object.entries(RANGOS).map(([k, v]) =>
+    el('option', { value: k, texto: v, selected: k === (base.rango || 'especialista') })));
   const cEnlace = el('input', { type: 'url', name: 'enlace', value: base.enlace || '',
     placeholder: 'https://… (opcional)', autocomplete: 'off' });
   const cPersona = el('textarea', { name: 'persona', rows: 5, maxLength: 4000,
@@ -1390,6 +1929,8 @@ function modalPersonaje(personaje, salaIdPorDefecto) {
       campo({ etiqueta: 'Sala', control: cSala }),
       campo({ etiqueta: 'Estado', control: cEstado }),
     ]),
+    campo({ etiqueta: 'Rango', control: cRango,
+      pista: 'Recepción recibe los encargos, el manager los reparte y el especialista los ejecuta.' }),
     campo({ etiqueta: 'Enlace', pista: 'Para una IA que vive en otra app: la tarjeta abrirá esta dirección.', control: cEnlace }),
     campo({ etiqueta: 'Persona', pista: 'Define su tono y su forma de responder. Es lo que lo hace suyo.', control: cPersona }),
   ]);
@@ -1418,7 +1959,7 @@ function modalPersonaje(personaje, salaIdPorDefecto) {
       }
     }
     const datos = { nombre, rol: cRol.value.trim(), salaId: cSala.value, estado: cEstado.value,
-      enlace, persona: cPersona.value.trim(), ejemplo: false };
+      rango: cRango.value, enlace, persona: cPersona.value.trim(), ejemplo: false };
 
     if (esNuevo) {
       oficina.personajes.push({ id: 'p' + (oficina.siguiente++), ...datos });
